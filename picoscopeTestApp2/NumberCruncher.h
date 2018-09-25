@@ -20,6 +20,7 @@ public:
 	NumberCruncher();
 	~NumberCruncher();
 	static ComplexNum_polar CompareSignals(const vector<int16_t> &sig1, const vector<int16_t> &sig2, double frequency, double timestep);
+	static ComplexNum_polar CompareSignalsDiff(const vector<int16_t> &sig1, const vector<int16_t> &sig2, const vector<int16_t> &sig3, double frequency, double timestep);
 
 private:
 	static ComplexNum_polar SingleFrequencyFourier(const vector<int16_t> &data, double period);

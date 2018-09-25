@@ -19,7 +19,24 @@ ComplexNum_polar NumberCruncher::CompareSignals(const vector<int16_t> &sig1, con
 	ret.phase = fmod(sig2_complex.phase - sig1_complex.phase, 360);
 	if (ret.phase > 180)
 		ret.phase -= 360;
+	if (ret.phase < -180)
+		ret.phase += 360;
 	return ret;
+}
+
+ComplexNum_polar NumberCruncher::CompareSignalsDiff(const vector<int16_t> &sig1, const vector<int16_t> &sig2, const vector<int16_t> &sig3, double frequency, double timestep)
+{
+	if (sig1.size() != sig2.size())
+		return ComplexNum_polar();
+
+	vector<int16_t> diff;
+	diff.reserve(sig1.size());
+	for (int i = 0; i < sig1.size(); i++)
+	{
+		diff.push_back(sig1[i] - sig2[i]);
+	}
+
+	return CompareSignals(diff, sig3, frequency, timestep);
 }
 
 ComplexNum_polar NumberCruncher::SingleFrequencyFourier(const vector<int16_t> &data, double period)

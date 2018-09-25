@@ -20,17 +20,32 @@ void cal_experiment::runExperiment(string filename, Picoscope * pscope)
 	{
 		// set up channels
 		pscope->configureChannel(1, params.range_chA);
-		pscope->configureChannel(2, params.range_chB);
+		if (pscope->getNumChannels() == 2)
+		{
+			pscope->configureChannel(2, params.range_chB);
+		}
+		else
+		{
+			pscope->configureChannel(2, params.range_chA);
+			pscope->configureChannel(3, params.range_chB);
+		}
 
 		// turn on signal generator
 		pscope->turnOnSignalGen(params.frequency, params.amplitude);
 
-		// get data
-		vector<int16_t> A, B;
-		pscope->getData_2ch(params.timebase, &params.numPoints, A, B);
-
-		/* Crunch the numbers */
-		ComplexNum_polar dataResult = NumberCruncher::CompareSignals(A, B, params.frequency, Picoscope::getTimebase(params.timebase));
+		// get data, crunch the numbers
+		vector<int16_t> A, B, C;
+		ComplexNum_polar dataResult;
+		if (pscope->getNumChannels() == 2)
+		{
+			pscope->getData_2ch(params.timebase, &params.numPoints, A, B);
+			dataResult = NumberCruncher::CompareSignals(A, B, params.frequency, Picoscope::getTimebase(params.timebase));
+		}
+		else
+		{
+			pscope->getData_3ch(params.timebase, &params.numPoints, A, B, C);
+			dataResult = NumberCruncher::CompareSignalsDiff(A, B, C, params.frequency, Picoscope::getTimebase(params.timebase));
+		}
 		cout << params.frequency << '\t' << dataResult.mag << '\t' << dataResult.phase << '\n';
 		fout << params.frequency << ',' << dataResult.mag << ',' << dataResult.phase << '\n';
 	}

@@ -21,7 +21,9 @@ public:
 	void configureChannel(int channelNum, PS5000A_RANGE range);
 	void turnOnSignalGen(double frequency, double amplitude);
 	void getData_2ch(scopeTimebase_t timebase, uint32_t * numPoints, vector<int16_t> &chA_data, vector<int16_t> &chB_data);
+	void getData_3ch(scopeTimebase_t timebase, uint32_t * numPoints, vector<int16_t> &chA_data, vector<int16_t> &chB_data, vector<int16_t> &chC_data);
 	static double getTimebase(scopeTimebase_t timebase);
+	int16_t getNumChannels() { return _numChannels; };
 
 private:
 	int16_t _InstrHandle;
