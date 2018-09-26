@@ -56,3 +56,10 @@ ComplexNum_polar NumberCruncher::SingleFrequencyFourier(const vector<int16_t> &d
 	x.phase = atan2(sumSine, sumCosine) * 180 / M_PI;
 	return x;
 }
+
+void NumberCruncher::NormalizeMag(vector<ComplexNum_polar> &x)
+{
+	double baseline = x.back().mag;
+	for (int i = 0; i < x.size(); i++)
+		x[i].mag /= baseline;
+}

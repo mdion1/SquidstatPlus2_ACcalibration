@@ -2,7 +2,8 @@
 
 #include <cstdint>
 #include <iostream>
-#include <fstream> 
+#include <fstream>
+#include <string>
 #include <vector>
 #include "NumberCruncher.h"
 #include "Picoscope.h"
@@ -28,11 +29,15 @@ public:
 	cal_experiment();
 	~cal_experiment();
 	void setDefaultParameters(experimentParams_t params);
+	experimentParams_t getDefaultParameters() { return _defaultParams; };
 	void appendParameters(experimentParams_t params);
 	void appendParameters(vector<double> freqList);
-	void runExperiment(string filename, Picoscope * pscope);
+	void runExperiment();
+	void readExperimentParamsFile(string filename);
 
 private:
+	Picoscope pscope;
+	string _outputFilename;
 	experimentParams_t _defaultParams;
 	vector<experimentParams_t> parameterList;
 };
