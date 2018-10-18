@@ -25,27 +25,38 @@ void cal_experiment::runExperiment()
 		{
 			pscope.configureChannel(2, params.range_chB);
 		}
-		else
+		else if (pscope.getNumChannels() == 3)
 		{
 			pscope.configureChannel(2, params.range_chA);
 			pscope.configureChannel(3, params.range_chB);
+		}
+		else if (pscope.getNumChannels() == 4)
+		{
+			pscope.configureChannel(2, params.range_chA);
+			pscope.configureChannel(3, params.range_chB);
+			pscope.configureChannel(4, params.range_chB);
 		}
 
 		// turn on signal generator
 		pscope.turnOnSignalGen(params.frequency, params.amplitude);
 		
 		// get data, crunch the numbers
-		vector<int16_t> A, B, C;
+		vector<int16_t> A, B, C, D;
 		
 		if (pscope.getNumChannels() == 2)
 		{
 			pscope.getData_2ch(params.timebase, &params.numPoints, A, B);
 			dataResults.push_back(NumberCruncher::CompareSignals(A, B, params.frequency, Picoscope::getTimebase(params.timebase)));
 		}
-		else
+		else if (pscope.getNumChannels() == 3)
 		{
 			pscope.getData_3ch(params.timebase, &params.numPoints, A, B, C);
 			dataResults.push_back(NumberCruncher::CompareSignalsDiff(A, B, C, params.frequency, Picoscope::getTimebase(params.timebase)));
+		}
+		else if (pscope.getNumChannels() == 4)
+		{
+			pscope.getData_4ch(params.timebase, &params.numPoints, A, B, C, D);
+			dataResults.push_back(NumberCruncher::CompareSignalsDiff2(A, B, C, D, params.frequency, Picoscope::getTimebase(params.timebase)));
 		}
 		cout << params.frequency << '\t' << dataResults.back().mag << '\t' << dataResults.back().phase << '\n';
 		

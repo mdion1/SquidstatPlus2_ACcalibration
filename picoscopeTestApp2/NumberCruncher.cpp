@@ -39,6 +39,23 @@ ComplexNum_polar NumberCruncher::CompareSignalsDiff(const vector<int16_t> &sig1,
 	return CompareSignals(diff, sig3, frequency, timestep);
 }
 
+ComplexNum_polar NumberCruncher::CompareSignalsDiff2(const vector<int16_t> &sig1, const vector<int16_t> &sig2, const vector<int16_t> &sig3, const vector<int16_t> &sig4, double frequency, double timestep)
+{
+	if (sig1.size() != sig2.size())
+		return ComplexNum_polar();
+
+	vector<int16_t> diff1, diff2;
+	diff1.reserve(sig1.size());
+	diff2.reserve(sig3.size());
+	for (int i = 0; i < sig1.size(); i++)
+	{
+		diff1.push_back(sig1[i] - sig2[i]);
+		diff2.push_back(sig3[i] - sig4[i]);
+	}
+
+	return CompareSignals(diff1, diff2, frequency, timestep);
+}
+
 ComplexNum_polar NumberCruncher::SingleFrequencyFourier(const vector<int16_t> &data, double period)
 {
 	//determine number of samples to ignore
