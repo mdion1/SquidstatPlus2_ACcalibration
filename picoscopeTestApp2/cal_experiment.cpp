@@ -91,7 +91,7 @@ void cal_experiment::appendParameters(vector<double> freqList)
 PS5000A_RANGE getRangeFromText(string str);
 scopeTimebase_t getTimebaseFromText(string str);
 
-void cal_experiment::readExperimentParamsFile(string filename)
+void cal_experiment::readExperimentParamsFile(string filename, string comPortAddr)
 {
 	ifstream file;
 	file.open(filename);
@@ -116,7 +116,87 @@ void cal_experiment::readExperimentParamsFile(string filename)
 	str.clear();
 	getline(file, str);		//get command-line argument for squidstat-controlling program
 	if (!str.empty())
+	{
+		str.insert(75, " ");
+		str.insert(75, comPortAddr);
 		system(str.c_str());
+	}
+
+	do
+	{
+		getline(file, str);
+		double decade = atof(str.c_str());
+		getFrequencies(decade);
+	} while (!file.eof());
+}
+
+void cal_experiment::getFrequencies(int decade)
+{
+	experimentParams_t defaultParams = getDefaultParameters();
+	vector<double> freqList;
+	if (decade >= 20e6)		//frequencies 2M through 100kHz
+	{
+		for (int i = 20; i > 0; i--)
+		{
+			freqList.push_back(i * 100e3);
+		}
+		appendParameters(freqList);
+	}
+	
+	else if (decade >= 100e3)
+	{
+		defaultParams.timebase = TIMEBASE_160NS;
+		setDefaultParameters(defaultParams);
+		for (int i = 9; i > 0; i--)		//frequencies 90k through 10kHz
+		{
+			freqList.push_back(i * 10e3);
+		}
+		appendParameters(freqList);
+	}
+	else if (decade >= 10e3)
+	{
+		defaultParams.timebase = TIMEBASE_1000NS;
+		defaultParams.numPoints = 100000;
+		setDefaultParameters(defaultParams);
+		for (int i = 9; i > 0; i--)		//frequencies 9k through 1kHz
+		{
+			freqList.push_back(i * 1e3);
+		}
+		appendParameters(freqList);
+	}
+	else if (decade >= 1e3)
+	{
+		defaultParams.timebase = TIMEBASE_10US;
+		defaultParams.numPoints = 100000;
+		setDefaultParameters(defaultParams);
+		for (int i = 9; i > 0; i--)		//frequencies 900 through 100Hz
+		{
+			freqList.push_back(i * 100);
+		}
+		appendParameters(freqList);
+	}
+	else if (decade >= 100)
+	{
+		defaultParams.timebase = TIMEBASE_10US;
+		defaultParams.numPoints = 100000;
+		setDefaultParameters(defaultParams);
+		for (int i = 9; i > 0; i--)		//frequencies 90 through 10Hz
+		{
+			freqList.push_back(i * 10);
+		}
+		appendParameters(freqList);
+	}
+	else if (decade >= 10)
+	{
+		defaultParams.timebase = TIMEBASE_100US;
+		defaultParams.numPoints = 100000;
+		setDefaultParameters(defaultParams);
+		for (int i = 9; i > 0; i--)		//frequencies 9 through 1Hz
+		{
+			freqList.push_back(i);
+		}
+		appendParameters(freqList);
+	}
 }
 
 PS5000A_RANGE getRangeFromText(string str)
