@@ -1,0 +1,16 @@
+c:/picoscope_experiments/I_inputBuffer2_raw.csv
+0,0.05,PS5000A_1V,PS5000A_500MV,TIMEBASE_16NS,62500
+3
+c:/potentiostat/squidstatcalibrator/bin/debug/squidstatcalibrator.exe v2 0 ac_cal_mode 4 x
+398107.1706
+354813.3892
+316227.766
+281838.2931
+251188.6432
+223872.1139
+199526.2315
+177827.941
+158489.3192
+141253.7545
+125892.5412
+112201.8454

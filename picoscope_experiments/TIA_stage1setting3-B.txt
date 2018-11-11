@@ -1,0 +1,18 @@
+c:/picoscope_experiments/TIA_stage1setting3_raw - B.csv
+0,2,PS5000A_2V,PS5000A_200MV,TIMEBASE_16NS,62500
+2
+c:/potentiostat/squidstatcalibrator/bin/debug/squidstatcalibrator.exe v2 0 ac_cal_mode 2 x
+177827.941
+158489.3192
+141253.7545
+125892.5412
+112201.8454
+100000
+89125.09381
+79432.82347
+70794.57844
+63095.73445
+56234.13252
+50118.72336
+44668.35922
+39810.71706

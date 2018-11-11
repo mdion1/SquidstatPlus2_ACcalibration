@@ -1,0 +1,2 @@
+cd C:\Users\Matt Dion\mdion1.github.com\picoscopeTestApp2\Debug\
+picoscopeTestApp2.exe C:\picoscope_experiments\TIA_stage1setting4.txt
