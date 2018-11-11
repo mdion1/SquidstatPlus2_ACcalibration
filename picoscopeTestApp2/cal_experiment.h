@@ -33,8 +33,9 @@ public:
 	void appendParameters(experimentParams_t params);
 	void appendParameters(vector<double> freqList);
 	void runExperiment();
-	void readExperimentParamsFile(string filename, string comPortAddr);
-	void getFrequencies(int decade);
+	void readExperimentParamsFile(string comPortAddr, string filename);
+	void getFrequencies(double freq);
+	vector<ComplexNum_polar> rawData;
 
 private:
 	Picoscope pscope;

@@ -12,11 +12,6 @@ cal_experiment::~cal_experiment()
 
 void cal_experiment::runExperiment()
 {
-	std::ofstream fout;
-	fout.open(_outputFilename, std::ofstream::out);
-	fout << "Frequency" << ',' << "Mag" << ',' << "Phase" << '\n';
-
-	vector<ComplexNum_polar> dataResults;
 	for (experimentParams_t params : parameterList)
 	{
 		// set up channels
@@ -45,27 +40,39 @@ void cal_experiment::runExperiment()
 		
 		if (pscope.getNumChannels() == 2)
 		{
-			pscope.getData_2ch(params.timebase, &params.numPoints, A, B);
-			dataResults.push_back(NumberCruncher::CompareSignals(A, B, params.frequency, Picoscope::getTimebase(params.timebase)));
+
+			vector<ComplexNum_polar> averageVector;
+			for (int i = 0; i < 5; i++)
+			{
+				pscope.getData_2ch(params.timebase, &params.numPoints, A, B);
+				averageVector.push_back(NumberCruncher::CompareSignals(A, B, params.frequency, Picoscope::getTimebase(params.timebase)));
+			}
+			rawData.push_back(NumberCruncher::getAvg(averageVector));
 		}
 		else if (pscope.getNumChannels() == 3)
 		{
-			pscope.getData_3ch(params.timebase, &params.numPoints, A, B, C);
-			dataResults.push_back(NumberCruncher::CompareSignalsDiff(A, B, C, params.frequency, Picoscope::getTimebase(params.timebase)));
+			vector<ComplexNum_polar> averageVector;
+			for (int i = 0; i < 5; i++)
+			{
+				pscope.getData_3ch(params.timebase, &params.numPoints, A, B, C);
+				averageVector.push_back(NumberCruncher::CompareSignalsDiff(A, B, C, params.frequency, Picoscope::getTimebase(params.timebase)));
+			}
+			rawData.push_back(NumberCruncher::getAvg(averageVector));
 		}
-		else if (pscope.getNumChannels() == 4)
+		/*else if (pscope.getNumChannels() == 4)
 		{
 			pscope.getData_4ch(params.timebase, &params.numPoints, A, B, C, D);
 			dataResults.push_back(NumberCruncher::CompareSignalsDiff2(A, B, C, D, params.frequency, Picoscope::getTimebase(params.timebase)));
-		}
-		cout << params.frequency << '\t' << dataResults.back().mag << '\t' << dataResults.back().phase << '\n';
-		
+		}*/
+		//cout << params.frequency << '\t' << dataResults.back().mag << '\t' << dataResults.back().phase << '\n';
+		cout << rawData.back().frequency << '\t' << rawData.back().mag << '\t' << rawData.back().phase << '\n';
 	}
-	NumberCruncher::NormalizeMag(dataResults);
-	for (int i = 0; i < dataResults.size(); i++)
-	{
-		fout << parameterList[i].frequency << ',' << dataResults[i].mag << ',' << dataResults[i].phase << '\n';
-	}
+
+	//NumberCruncher::NormalizeMag(dataResults);
+	//for (int i = 0; i < dataResults.size(); i++)
+	//{
+	//	fout << parameterList[i].frequency << ',' << dataResults[i].mag << ',' << dataResults[i].phase << '\n';
+	//}
 	pscope.close();
 }
 
@@ -91,7 +98,7 @@ void cal_experiment::appendParameters(vector<double> freqList)
 PS5000A_RANGE getRangeFromText(string str);
 scopeTimebase_t getTimebaseFromText(string str);
 
-void cal_experiment::readExperimentParamsFile(string filename, string comPortAddr)
+void cal_experiment::readExperimentParamsFile(string comPortAddr, string filename)
 {
 	ifstream file;
 	file.open(filename);
@@ -125,78 +132,70 @@ void cal_experiment::readExperimentParamsFile(string filename, string comPortAdd
 	do
 	{
 		getline(file, str);
-		double decade = atof(str.c_str());
-		getFrequencies(decade);
+		double frequency = atof(str.c_str());
+		getFrequencies(frequency);
 	} while (!file.eof());
 }
 
-void cal_experiment::getFrequencies(int decade)
+void cal_experiment::getFrequencies(double freq)
 {
 	experimentParams_t defaultParams = getDefaultParameters();
-	vector<double> freqList;
-	if (decade >= 20e6)		//frequencies 2M through 100kHz
+
+	//if (freq >= 100e3)
+	//{
+	//	defaultParams.timebase = TIMEBASE_16NS;
+	//	//defaultParams.numPoints = 62500;
+	//	defaultParams.numPoints = 100000;
+	//}
+	//else if (freq >= 10e3)
+	//{
+	//	defaultParams.timebase = TIMEBASE_160NS;
+	//	//defaultParams.numPoints = 62500;
+	//	defaultParams.numPoints = 100000;
+	//}
+	//else if (freq >= 1e3)
+	//{
+	//	defaultParams.timebase = TIMEBASE_160NS;
+	//	//defaultParams.timebase = TIMEBASE_1000NS;
+	//	defaultParams.numPoints = 100000;
+	//}
+	//else if (freq >= 100)
+	//{
+	//	defaultParams.timebase = TIMEBASE_10US;
+	//	defaultParams.numPoints = 100000;
+	//}
+	//else if (freq >= 10)
+	//{
+	//	defaultParams.timebase = TIMEBASE_10US;
+	//	defaultParams.numPoints = 100000;
+	//}
+	//else if (freq >= 1)
+	//{
+	//	defaultParams.timebase = TIMEBASE_100US;
+	//	defaultParams.numPoints = 100000;
+	//}
+
+	defaultParams.frequency = freq;
+
+	defaultParams.timebase = TIMEBASE_16NS;
+	while (true)
 	{
-		for (int i = 20; i > 0; i--)
+		int maxNumPoints = 1e5;
+		double dt = Picoscope::getTimebase(defaultParams.timebase);
+		int numCycles = 2;
+		double numPoints = (numCycles / freq) / dt;
+		if (numPoints > maxNumPoints)
+			defaultParams.timebase = (scopeTimebase_t)((int)defaultParams.timebase + 1);
+		else
 		{
-			freqList.push_back(i * 100e3);
+			//numPoints = MIN(maxNumPoints, 0.1 / dt);
+			//defaultParams.numPoints = numPoints;
+			defaultParams.numPoints = maxNumPoints;
+			break;
 		}
-		appendParameters(freqList);
 	}
-	
-	else if (decade >= 100e3)
-	{
-		defaultParams.timebase = TIMEBASE_160NS;
-		setDefaultParameters(defaultParams);
-		for (int i = 9; i > 0; i--)		//frequencies 90k through 10kHz
-		{
-			freqList.push_back(i * 10e3);
-		}
-		appendParameters(freqList);
-	}
-	else if (decade >= 10e3)
-	{
-		defaultParams.timebase = TIMEBASE_1000NS;
-		defaultParams.numPoints = 100000;
-		setDefaultParameters(defaultParams);
-		for (int i = 9; i > 0; i--)		//frequencies 9k through 1kHz
-		{
-			freqList.push_back(i * 1e3);
-		}
-		appendParameters(freqList);
-	}
-	else if (decade >= 1e3)
-	{
-		defaultParams.timebase = TIMEBASE_10US;
-		defaultParams.numPoints = 100000;
-		setDefaultParameters(defaultParams);
-		for (int i = 9; i > 0; i--)		//frequencies 900 through 100Hz
-		{
-			freqList.push_back(i * 100);
-		}
-		appendParameters(freqList);
-	}
-	else if (decade >= 100)
-	{
-		defaultParams.timebase = TIMEBASE_10US;
-		defaultParams.numPoints = 100000;
-		setDefaultParameters(defaultParams);
-		for (int i = 9; i > 0; i--)		//frequencies 90 through 10Hz
-		{
-			freqList.push_back(i * 10);
-		}
-		appendParameters(freqList);
-	}
-	else if (decade >= 10)
-	{
-		defaultParams.timebase = TIMEBASE_100US;
-		defaultParams.numPoints = 100000;
-		setDefaultParameters(defaultParams);
-		for (int i = 9; i > 0; i--)		//frequencies 9 through 1Hz
-		{
-			freqList.push_back(i);
-		}
-		appendParameters(freqList);
-	}
+
+	appendParameters(defaultParams);
 }
 
 PS5000A_RANGE getRangeFromText(string str)

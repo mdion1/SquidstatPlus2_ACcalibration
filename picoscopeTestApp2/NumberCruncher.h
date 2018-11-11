@@ -10,6 +10,7 @@ using namespace std;
 
 typedef struct
 {
+	double frequency;
 	double mag;
 	double phase;
 }ComplexNum_polar;
@@ -22,6 +23,7 @@ public:
 	static ComplexNum_polar CompareSignals(const vector<int16_t> &sig1, const vector<int16_t> &sig2, double frequency, double timestep);
 	static ComplexNum_polar CompareSignalsDiff(const vector<int16_t> &sig1, const vector<int16_t> &sig2, const vector<int16_t> &sig3, double frequency, double timestep);
 	static ComplexNum_polar CompareSignalsDiff2(const vector<int16_t> &sig1, const vector<int16_t> &sig2, const vector<int16_t> &sig3, const vector<int16_t> &sig4, double frequency, double timestep);
+	static ComplexNum_polar getAvg(const vector<ComplexNum_polar> &data);
 	static void NormalizeMag(vector<ComplexNum_polar> &x);
 
 private:

@@ -15,11 +15,12 @@ ComplexNum_polar NumberCruncher::CompareSignals(const vector<int16_t> &sig1, con
 	ComplexNum_polar sig1_complex = SingleFrequencyFourier(sig1, period);
 	ComplexNum_polar sig2_complex = SingleFrequencyFourier(sig2, period);
 	ComplexNum_polar ret;
+	ret.frequency = frequency;
 	ret.mag = sig2_complex.mag / sig1_complex.mag;
 	ret.phase = fmod(sig2_complex.phase - sig1_complex.phase, 360);
-	if (ret.phase > 180)
+	if (ret.phase > 170)
 		ret.phase -= 360;
-	if (ret.phase < -180)
+	if (ret.phase < -190)
 		ret.phase += 360;
 	return ret;
 }
@@ -74,9 +75,28 @@ ComplexNum_polar NumberCruncher::SingleFrequencyFourier(const vector<int16_t> &d
 	return x;
 }
 
+ComplexNum_polar NumberCruncher::getAvg(const vector<ComplexNum_polar> &data)
+{
+	ComplexNum_polar ret = { 0, 0 };
+	if (data.size() == 0)
+		return ret;
+	for (int i = 0; i < data.size(); i++)
+	{
+		ret.mag += data[i].mag;
+		ret.phase += data[i].phase;
+	}
+	ret.frequency = data[0].frequency;
+	ret.mag /= data.size();
+	ret.phase /= data.size();
+	return ret;
+}
+
 void NumberCruncher::NormalizeMag(vector<ComplexNum_polar> &x)
 {
-	double baseline = x.back().mag;
+	ComplexNum_polar baseline = x.back();
 	for (int i = 0; i < x.size(); i++)
-		x[i].mag /= baseline;
+	{
+		x[i].mag /= baseline.mag;
+		x[i].phase -= baseline.phase;
+	}
 }
