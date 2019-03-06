@@ -15,47 +15,99 @@ void cal_experiment::runExperiment()
 	for (experimentParams_t params : parameterList)
 	{
 		// set up channels
-		pscope.configureChannel(1, params.range_chA);
-		if (pscope.getNumChannels() == 2)
-		{
-			pscope.configureChannel(2, params.range_chB);
-		}
-		else if (pscope.getNumChannels() == 3)
-		{
-			pscope.configureChannel(2, params.range_chA);
-			pscope.configureChannel(3, params.range_chB);
-		}
-		else if (pscope.getNumChannels() == 4)
-		{
-			pscope.configureChannel(2, params.range_chA);
-			pscope.configureChannel(3, params.range_chB);
-			pscope.configureChannel(4, params.range_chB);
-		}
+		//pscope.doublecheckresolution();//debugging only
+		//pscope.configureChannel(1, params.range_chA);
+		//if (pscope.getNumChannels() == 2)
+		//{
+		//	pscope.configureChannel(2, params.range_chB);
+		//}
+		//else if (pscope.getNumChannels() == 3)
+		//{
+		//	pscope.configureChannel(2, params.range_chA);
+		//	pscope.configureChannel(3, params.range_chB);
+		//}
+		//else if (pscope.getNumChannels() == 4)
+		//{
+		//	pscope.configureChannel(2, params.range_chA);
+		//	pscope.configureChannel(3, params.range_chB);
+		//	pscope.configureChannel(4, params.range_chB);
+		//}
 
 		// turn on signal generator
 		pscope.turnOnSignalGen(params.frequency, params.amplitude);
 		
 		// get data, crunch the numbers
 		vector<int16_t> A, B, C, D;
+		int numAvgs;
+//#define QUICK_RUN
+#ifdef QUICK_RUN
+		numAvgs = 5;
+#else
+		if (params.frequency < 10)
+			numAvgs = 5;
+		else if (params.frequency < 100)
+			numAvgs = 10;
+		else
+			numAvgs = 20;
+#endif
 		
 		if (pscope.getNumChannels() == 2)
 		{
 
 			vector<ComplexNum_polar> averageVector;
-			for (int i = 0; i < 5; i++)
+			vector<ComplexNum_polar> v_chA, v_chB, v_chAB;
+			double A_B_scaler = Picoscope::getScale(params.range_chB) / Picoscope::getScale(params.range_chA);
+
+			/* Get magnitude by running channels A and B separately */
+			pscope.configureChannel(1, params.range_chA);
+			pscope.disableChannel(PS5000A_CHANNEL_B);
+			for (int i = 0; i < numAvgs; i++)
+			{
+				pscope.getData_1ch(params.timebase, &params.numPoints, A, PS5000A_CHANNEL_A);
+				v_chA.push_back(NumberCruncher::AnalyzeSignalSingle(A, params.frequency, Picoscope::getTimebase(params.timebase)));
+				A.clear();
+			}
+			pscope.configureChannel(2, params.range_chB);
+			pscope.disableChannel(PS5000A_CHANNEL_A);
+			for (int i = 0; i < numAvgs; i++)
+			{
+				pscope.getData_1ch(params.timebase, &params.numPoints, B, PS5000A_CHANNEL_B);
+				v_chB.push_back(NumberCruncher::AnalyzeSignalSingle(B, params.frequency, Picoscope::getTimebase(params.timebase)));
+				B.clear();
+			}
+
+			/* Get phase by running channels A and B together */
+			pscope.configureChannel(1, params.range_chA);
+			for (int i = 0; i < numAvgs; i++)
 			{
 				pscope.getData_2ch(params.timebase, &params.numPoints, A, B);
-				averageVector.push_back(NumberCruncher::CompareSignals(A, B, params.frequency, Picoscope::getTimebase(params.timebase)));
+				v_chAB.push_back(NumberCruncher::CompareSignals(A, B, params.frequency, Picoscope::getTimebase(params.timebase), A_B_scaler));
+				A.clear(); B.clear();
 			}
-			rawData.push_back(NumberCruncher::getAvg(averageVector));
+			auto A_avg = NumberCruncher::getAvg(v_chA);
+			auto B_avg = NumberCruncher::getAvg(v_chB);
+			auto AB_avg = NumberCruncher::getAvg(v_chAB);
+			auto result = AB_avg;
+			result.mag = B_avg.mag / A_avg.mag / A_B_scaler;
+			rawData.push_back(result);
+
+			/*for (int i = 0; i < numAvgs; i++)
+			{
+				pscope.getData_2ch(params.timebase, &params.numPoints, A, B);
+				double A_B_scaler = Picoscope::getScale(params.range_chB) / Picoscope::getScale(params.range_chA);
+				averageVector.push_back(NumberCruncher::CompareSignals(A, B, params.frequency, Picoscope::getTimebase(params.timebase), A_B_scaler));
+			}
+			rawData.push_back(NumberCruncher::getAvg(averageVector));*/
+			
 		}
 		else if (pscope.getNumChannels() == 3)
 		{
 			vector<ComplexNum_polar> averageVector;
-			for (int i = 0; i < 5; i++)
+			for (int i = 0; i < numAvgs; i++)
 			{
 				pscope.getData_3ch(params.timebase, &params.numPoints, A, B, C);
-				averageVector.push_back(NumberCruncher::CompareSignalsDiff(A, B, C, params.frequency, Picoscope::getTimebase(params.timebase)));
+				double A_B_scaler = Picoscope::getScale(params.range_chB) / Picoscope::getScale(params.range_chA);
+				averageVector.push_back(NumberCruncher::CompareSignalsDiff(A, B, C, params.frequency, Picoscope::getTimebase(params.timebase), A_B_scaler));
 			}
 			rawData.push_back(NumberCruncher::getAvg(averageVector));
 		}
@@ -180,7 +232,12 @@ void cal_experiment::getFrequencies(double freq)
 	defaultParams.timebase = TIMEBASE_16NS;
 	while (true)
 	{
+#define CONTROL_RUN
+#ifdef CONTROL_RUN
+		int maxNumPoints = 2.5e5;
+#else
 		int maxNumPoints = 1e5;
+#endif
 		double dt = Picoscope::getTimebase(defaultParams.timebase);
 		int numCycles = 2;
 		double numPoints = (numCycles / freq) / dt;
@@ -190,6 +247,14 @@ void cal_experiment::getFrequencies(double freq)
 		{
 			//numPoints = MIN(maxNumPoints, 0.1 / dt);
 			//defaultParams.numPoints = numPoints;
+
+			/********debugging*************/
+			/*double period = 1 / freq / dt;
+			double numWholeCycles = floor(maxNumPoints / period);
+			int len = (int)floor(numWholeCycles * period);
+			cout << freq << "\t" << len << "\n";*/
+
+
 			defaultParams.numPoints = maxNumPoints;
 			break;
 		}
