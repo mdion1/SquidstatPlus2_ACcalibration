@@ -42,7 +42,7 @@ void cal_experiment::runExperiment()
 		{
 
 			vector<ComplexNum_polar> averageVector;
-			for (int i = 0; i < 5; i++)
+			for (int i = 0; i < 20; i++)
 			{
 				pscope.getData_2ch(params.timebase, &params.numPoints, A, B);
 				averageVector.push_back(NumberCruncher::CompareSignals(A, B, params.frequency, Picoscope::getTimebase(params.timebase)));
@@ -180,7 +180,7 @@ void cal_experiment::getFrequencies(double freq)
 	defaultParams.timebase = TIMEBASE_16NS;
 	while (true)
 	{
-		int maxNumPoints = 1e5;
+		int maxNumPoints = 2.5e5;
 		double dt = Picoscope::getTimebase(defaultParams.timebase);
 		int numCycles = 2;
 		double numPoints = (numCycles / freq) / dt;
