@@ -91,7 +91,7 @@ void cal_experiment::runExperiment()
 	for (int i = 0; i < v_chA.size(); i++)
 	{
 		ComplexNum_polar x = v_chAB[i];
-		x.mag = v_chB[i].mag / v_chA[i].mag / A_B_scaler;
+		x.mag = v_chB[i].mag / v_chA[i].mag * A_B_scaler;
 		rawData.push_back(x);
 	}
 
