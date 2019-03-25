@@ -13,9 +13,17 @@ bool Picoscope::open(int numChannels)
 {
 	PICO_STATUS status = PICO_OK;
 	_numChannels = numChannels;
+
+#if PICOSCOPE_RESOLUTION == 15
 	PS5000A_DEVICE_RESOLUTION resolution = PS5000A_DR_15BIT;
-	if (numChannels > 2)
-		resolution = PS5000A_DR_14BIT;
+#elif PICOSCOPE_RESOLUTION == 12
+	PS5000A_DEVICE_RESOLUTION resolution = PS5000A_DR_12BIT;
+#elif PICOSCOPE_RESOLUTION == 8
+	PS5000A_DEVICE_RESOLUTION resolution = PS5000A_DR_8BIT;
+#endif
+
+
+
 	status = ps5000aOpenUnit(&_InstrHandle, NULL, resolution);
 
 	if (status != PICO_OK && _InstrHandle <= 0)
@@ -26,13 +34,6 @@ bool Picoscope::open(int numChannels)
 		return false;
 	}
 	return true;
-}
-
-void Picoscope::doublecheckresolution()
-{
-	if (ps5000aSetDeviceResolution(_InstrHandle, PS5000A_DR_14BIT) == PICO_OK)
-		cout << "resolution ok";
-	
 }
 
 void Picoscope::configureChannel(int channelNum, PS5000A_RANGE range)
@@ -186,7 +187,39 @@ void Picoscope::getData_4ch(scopeTimebase_t timebase, uint32_t * pNumPoints, vec
 
 double Picoscope::getTimebase(scopeTimebase_t timebase)
 {
-	return (((double)timebase - 2) / 125000000.0);
+#if PICOSCOPE_RESOLUTION == 15
+	return (((double)timebase - 2) / 125.e6);
+#elif PICOSCOPE_RESOLUTION == 12
+	int32_t x;
+	switch ((int)timebase)
+	{
+	case 1:
+	case 2:
+	case 3:
+		x = 1 << (timebase - 1);
+		return ((double)x) / 5.0e8;
+		break;
+	case 4:
+	default:
+		return (((double)timebase - 3) / 62.5e6);
+		break;
+	}
+#elif PICOSCOPE_RESOLUTION == 8
+	int32_t x;
+	switch ((int)timebase)
+	{
+	case 0:
+	case 1:
+	case 2:
+		x = 1 << timebase;
+		return ((double)x) / 1.0e9;
+		break;
+	case 3:
+	default:
+		return (((double)timebase - 2) / 125.e6);
+		break;
+	}
+#endif
 }
 
 double Picoscope::getScale(PS5000A_RANGE range)

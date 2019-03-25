@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include "NumberCruncher.h"
+#include "ResolutionSettings.h"
 using namespace std;
 
 typedef enum {
@@ -29,8 +30,6 @@ public:
 	static double getTimebase(scopeTimebase_t timebase);
 	static double getScale(PS5000A_RANGE range);
 	int16_t getNumChannels() { return _numChannels; };
-
-	void doublecheckresolution();
 
 private:
 	int16_t _InstrHandle;
