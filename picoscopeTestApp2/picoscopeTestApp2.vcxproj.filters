@@ -30,6 +30,9 @@
     <ClInclude Include="cal_experiment.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ResolutionSettings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

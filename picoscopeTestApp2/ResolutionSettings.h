@@ -1,0 +1,5 @@
+#pragma once
+
+#define PICOSCOPE_RESOLUTION 15
+//#define PICOSCOPE_RESOLUTION 12
+//#define PICOSCOPE_RESOLUTION 8

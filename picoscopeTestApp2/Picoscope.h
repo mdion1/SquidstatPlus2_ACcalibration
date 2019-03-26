@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <iostream>
 #include <vector>
+#include "NumberCruncher.h"
+#include "ResolutionSettings.h"
 using namespace std;
 
 typedef enum {
