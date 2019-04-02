@@ -7,6 +7,7 @@
 #include <vector>
 #include "NumberCruncher.h"
 #include "Picoscope.h"
+#include "siglent_scope.h"
 
 #define MIN(x, y) (x < y ? x : y)
 #define MAX(x, y) (x > y ? x : y)
@@ -39,6 +40,7 @@ public:
 
 private:
 	Picoscope pscope;
+	siglent_scope sig_scope;
 	string _outputFilename;
 	experimentParams_t _defaultParams;
 	vector<experimentParams_t> parameterList;

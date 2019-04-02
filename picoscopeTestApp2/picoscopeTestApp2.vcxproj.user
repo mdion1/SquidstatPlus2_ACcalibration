@@ -3,6 +3,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LocalDebuggerCommandArguments>COM8 "C:\picoscope_experiments\one_control\debugging.txt" "C:\Users\Mark\Dropbox\Admiral Instruments Dropbox\Squidstat customer records\Plus1136/TIA_stage1setting2raw.csv"</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerAmpDefaultAccelerator> </LocalDebuggerAmpDefaultAccelerator>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LocalDebuggerCommandArguments>COM8 "C:\picoscope_experiments\one_control\debugging.txt" "C:\Users\Matt Dion\Dropbox\Admiral Instruments Dropbox\Squidstat customer records\Plus1136/TIA_stage1setting2raw.csv"</LocalDebuggerCommandArguments>

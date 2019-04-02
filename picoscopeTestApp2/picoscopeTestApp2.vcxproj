@@ -160,6 +160,7 @@
     <ClInclude Include="cal_experiment.h" />
     <ClInclude Include="NumberCruncher.h" />
     <ClInclude Include="Picoscope.h" />
+    <ClInclude Include="siglent_scope.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
@@ -167,7 +168,8 @@
     <ClCompile Include="cal_experiment.cpp" />
     <ClCompile Include="NumberCruncher.cpp" />
     <ClCompile Include="Picoscope.cpp" />
-    <ClCompile Include="picoscopeTestApp2.cpp" />
+    <ClCompile Include="picoscopeTestApp2_fixed_encoding.cpp" />
+    <ClCompile Include="siglent_scope.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

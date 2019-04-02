@@ -30,12 +30,12 @@
     <ClInclude Include="cal_experiment.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="siglent_scope.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="picoscopeTestApp2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Picoscope.cpp">
@@ -45,6 +45,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="cal_experiment.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="siglent_scope.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="picoscopeTestApp2_fixed_encoding.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

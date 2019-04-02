@@ -25,6 +25,42 @@ int getNumAvgs(double freq)
 #endif
 }
 
+#ifdef SIGLENT_SCOPE
+
+void cal_experiment::runExperiment()
+{
+	vector<ComplexNum_polar> v_chA, v_chB, v_chAB;
+	double A_B_scaler = Picoscope::getScale(parameterList[0].range_chB) / Picoscope::getScale(parameterList[0].range_chA);
+
+	sig_scope.configureChannel(1, parameterList[0].range_chA);
+	sig_scope.configureChannel(2, parameterList[0].range_chB);
+	for (experimentParams_t params : parameterList)
+	{
+		// turn on signal generator
+		sig_scope.turnOnSignalGen(params.frequency, params.amplitude);
+
+		int numAvgs = getNumAvgs(params.frequency);
+		vector<ComplexNum_polar> avg;
+		for (int i = 0; i < numAvgs; i++)
+		{
+			vector<int16_t> A, B;
+			sig_scope.getData_2ch(params.timebase, &params.numPoints, A, B);
+			avg.push_back(NumberCruncher::CompareSignals(A, B, params.frequency, siglent_scope::getTimebase(params.timebase), A_B_scaler));
+		}
+		v_chAB.push_back(NumberCruncher::getAvg(avg));
+		cout << v_chAB.back().frequency << '\t' << v_chAB.back().mag << '\t' << v_chAB.back().phase << '\n';
+	}
+
+	for (int i = 0; i < v_chA.size(); i++)
+	{
+		ComplexNum_polar x = v_chAB[i];
+		x.mag = v_chB[i].mag / v_chA[i].mag * A_B_scaler;
+		rawData.push_back(x);
+	}
+
+	pscope.close();
+}
+#else
 void cal_experiment::runExperiment()
 {
 	vector<ComplexNum_polar> v_chA, v_chB, v_chAB;
@@ -97,6 +133,7 @@ void cal_experiment::runExperiment()
 
 	pscope.close();
 }
+#endif
 
 void cal_experiment::setDefaultParameters(experimentParams_t params)
 {
@@ -140,7 +177,11 @@ void cal_experiment::readExperimentParamsFile(string comPortAddr, string filenam
 	_defaultParams.numPoints = atoi(str.c_str());
 	getline(file, str);			//get number of signals/channels
 	int numChannels = atoi(str.c_str());
+#ifdef SIGLENT_SCOPE
+	sig_scope.open();
+#else
 	pscope.open(numChannels);
+#endif
 
 	str.clear();
 	getline(file, str);		//get command-line argument for squidstat-controlling program
@@ -159,6 +200,47 @@ void cal_experiment::readExperimentParamsFile(string comPortAddr, string filenam
 	} while (!file.eof());
 }
 
+#ifdef SIGLENT_SCOPE
+void cal_experiment::getFrequencies(double freq)
+{
+	experimentParams_t defaultParams = getDefaultParameters();
+
+	defaultParams.frequency = freq;
+
+	defaultParams.timebase = (scopeTimebase_t)1;
+	while (true)
+	{
+#define CONTROL_RUN
+#ifdef CONTROL_RUN
+		int maxNumPoints = 2.5e5;
+#else
+		int maxNumPoints = 1e5;
+#endif
+		double dt = siglent_scope::getTimebase(defaultParams.timebase);
+		int numCycles = 2;
+		double numPoints = (numCycles / freq) / dt;
+		if (numPoints > maxNumPoints)
+			defaultParams.timebase = (scopeTimebase_t)((int)defaultParams.timebase + 1);
+		else
+		{
+			//numPoints = MIN(maxNumPoints, 0.1 / dt);
+			//defaultParams.numPoints = numPoints;
+
+			/********debugging*************/
+			/*double period = 1 / freq / dt;
+			double numWholeCycles = floor(maxNumPoints / period);
+			int len = (int)floor(numWholeCycles * period);
+			cout << freq << "\t" << len << "\n";*/
+
+
+			defaultParams.numPoints = maxNumPoints;
+			break;
+		}
+	}
+
+	appendParameters(defaultParams);
+}
+#else
 void cal_experiment::getFrequencies(double freq)
 {
 	experimentParams_t defaultParams = getDefaultParameters();
@@ -198,6 +280,7 @@ void cal_experiment::getFrequencies(double freq)
 
 	appendParameters(defaultParams);
 }
+#endif
 
 PS5000A_RANGE getRangeFromText(string str)
 {
