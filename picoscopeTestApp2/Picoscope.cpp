@@ -47,9 +47,9 @@ void Picoscope::configureChannel(int channelNum, PS5000A_RANGE range)
 	}
 }
 
-void Picoscope::turnOnSignalGen(double frequency, double amplitude)
+void Picoscope::turnOnSignalGen(double frequency, double amplitude, double dcbias)
 {
-	ps5000aSetSigGenBuiltIn(_InstrHandle, 0.5, amplitude * 1e6, PS5000A_SINE, frequency, frequency, 0, 1, PS5000A_UP, PS5000A_ES_OFF, PS5000A_SHOT_SWEEP_TRIGGER_CONTINUOUS_RUN, PS5000A_SHOT_SWEEP_TRIGGER_CONTINUOUS_RUN, PS5000A_SIGGEN_RISING, PS5000A_SIGGEN_NONE, 0);
+	ps5000aSetSigGenBuiltIn(_InstrHandle, (int32_t)(dcbias * 1e6), (uint32_t)(amplitude * 1e6), PS5000A_SINE, frequency, frequency, 0, 1, PS5000A_UP, PS5000A_ES_OFF, PS5000A_SHOT_SWEEP_TRIGGER_CONTINUOUS_RUN, PS5000A_SHOT_SWEEP_TRIGGER_CONTINUOUS_RUN, PS5000A_SIGGEN_RISING, PS5000A_SIGGEN_NONE, 0);
 }
 
 void Picoscope::close()

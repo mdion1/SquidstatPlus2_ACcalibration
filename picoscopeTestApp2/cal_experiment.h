@@ -17,6 +17,7 @@ typedef struct
 {
 	double frequency;
 	double amplitude;
+	double DCbias;
 	PS5000A_RANGE range_chA;
 	PS5000A_RANGE range_chB;
 	scopeTimebase_t timebase;
@@ -33,7 +34,7 @@ public:
 	void appendParameters(experimentParams_t params);
 	void appendParameters(vector<double> freqList);
 	void runExperiment();
-	void readExperimentParamsFile(string comPortAddr, string filename);
+	void readExperimentParamsFile(string filename);
 	void getFrequencies(double freq);
 	vector<ComplexNum_polar> rawData;
 
