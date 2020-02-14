@@ -30,6 +30,9 @@
     <ClInclude Include="cal_experiment.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="InputCheckerAsync.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -45,6 +48,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="cal_experiment.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RepeatingFrequencySweep_main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InputCheckerAsync.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

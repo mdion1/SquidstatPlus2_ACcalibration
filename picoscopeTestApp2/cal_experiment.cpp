@@ -14,65 +14,23 @@ void cal_experiment::runExperiment()
 {
 	for (experimentParams_t params : parameterList)
 	{
-		// set up channels
-		pscope.configureChannel(1, params.range_chA);
-		if (pscope.getNumChannels() == 2)
-		{
-			pscope.configureChannel(2, params.range_chB);
-		}
-		else if (pscope.getNumChannels() == 3)
-		{
-			pscope.configureChannel(2, params.range_chA);
-			pscope.configureChannel(3, params.range_chB);
-		}
-		else if (pscope.getNumChannels() == 4)
-		{
-			pscope.configureChannel(2, params.range_chA);
-			pscope.configureChannel(3, params.range_chB);
-			pscope.configureChannel(4, params.range_chB);
-		}
-
 		// turn on signal generator
 		pscope.turnOnSignalGen(params.frequency, params.amplitude, params.DCbias);
-		
+
 		// get data, crunch the numbers
-		vector<int16_t> A, B, C, D;
-		
-		if (pscope.getNumChannels() == 2)
+		vector<int16_t> A, B;
+		vector<ComplexNum_polar> averageVector;
+		for (int i = 0; i < 5; i++)
 		{
-
-			vector<ComplexNum_polar> averageVector;
-			for (int i = 0; i < 5; i++)
-			{
-				pscope.getData_2ch(params.timebase, &params.numPoints, A, B);
-				averageVector.push_back(NumberCruncher::CompareSignals(A, B, params.frequency, Picoscope::getTimebase(params.timebase)));
-			}
-			rawData.push_back(NumberCruncher::getAvg(averageVector));
+			pscope.getData_2ch(params.timebase, &params.numPoints, A, B);
+			averageVector.push_back(NumberCruncher::CompareSignals(A, B, params.frequency, Picoscope::getTimebase(params.timebase)));
 		}
-		else if (pscope.getNumChannels() == 3)
-		{
-			vector<ComplexNum_polar> averageVector;
-			for (int i = 0; i < 5; i++)
-			{
-				pscope.getData_3ch(params.timebase, &params.numPoints, A, B, C);
-				averageVector.push_back(NumberCruncher::CompareSignalsDiff(A, B, C, params.frequency, Picoscope::getTimebase(params.timebase)));
-			}
-			rawData.push_back(NumberCruncher::getAvg(averageVector));
-		}
-		/*else if (pscope.getNumChannels() == 4)
-		{
-			pscope.getData_4ch(params.timebase, &params.numPoints, A, B, C, D);
-			dataResults.push_back(NumberCruncher::CompareSignalsDiff2(A, B, C, D, params.frequency, Picoscope::getTimebase(params.timebase)));
-		}*/
-		//cout << params.frequency << '\t' << dataResults.back().mag << '\t' << dataResults.back().phase << '\n';
-		cout << rawData.back().frequency << '\t' << rawData.back().mag << '\t' << rawData.back().phase << '\n';
+		rawData.push_back(NumberCruncher::getAvg(averageVector));
 	}
+}
 
-	//NumberCruncher::NormalizeMag(dataResults);
-	//for (int i = 0; i < dataResults.size(); i++)
-	//{
-	//	fout << parameterList[i].frequency << ',' << dataResults[i].mag << ',' << dataResults[i].phase << '\n';
-	//}
+void cal_experiment::closePicoscope()
+{
 	pscope.close();
 }
 
@@ -95,7 +53,23 @@ void cal_experiment::appendParameters(vector<double> freqList)
 	}
 }
 
-PS5000A_RANGE getRangeFromText(string str);
+void cal_experiment::buildSimpleSweep(double ACamp, double DCbias, double freq_start, double freq_end, int numPoints)
+{
+	_defaultParams.amplitude = ACamp;
+	_defaultParams.DCbias = DCbias;
+	_defaultParams.range_chA = _defaultParams.range_chB = getRangeFromInputAmplitude(ACamp);
+
+	// set up scope
+	pscope.open(2);
+	pscope.configureChannel(1, _defaultParams.range_chA);
+	pscope.configureChannel(2, _defaultParams.range_chB);
+
+	vector<double> freqList = getFrequencyList(freq_start, freq_end, numPoints);
+	for (int i = 0; i < freqList.size(); i++)
+	{
+		getFrequencies(freqList[i]);
+	}
+}
 
 void cal_experiment::readExperimentParamsFile(string filename)
 {
@@ -175,4 +149,35 @@ PS5000A_RANGE getRangeFromText(string str)
 		return PS5000A_20V;
 	else
 		return PS5000A_50V;
+}
+
+PS5000A_RANGE getRangeFromInputAmplitude(double ACexcitationAmp)
+{
+	/* ACexcitationAmp is giving in volts, pk-pk */
+	const double rangeMax[12] = { 50, 20, 10, 5, 2, 1, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01 };
+	const PS5000A_RANGE rangeList[12] = { PS5000A_50V, PS5000A_20V, PS5000A_10V, PS5000A_5V, PS5000A_2V, PS5000A_1V, PS5000A_500MV, PS5000A_200MV, PS5000A_100MV, PS5000A_50MV, PS5000A_20MV, PS5000A_10MV };
+	double margin = 0.8;
+	int index = 0;
+	while (ACexcitationAmp / 2 / margin < rangeMax[index + 1])
+	{
+		index++;
+		if (index == 11)
+			break;
+	}
+	return rangeList[index];
+}
+
+vector<double> getFrequencyList(double freq_start, double freq_end, int numPoints)
+{
+	vector<double> ret;
+	if (numPoints < 1 || freq_start == 0 || freq_end == 0)
+		return ret;
+
+	double ratio = pow(freq_end / freq_start, 1.0 / (numPoints - 1));
+	for (int i = 0; i < numPoints; i++)
+	{
+		ret.push_back(freq_start * pow(ratio, i));
+	}
+
+	return ret;
 }

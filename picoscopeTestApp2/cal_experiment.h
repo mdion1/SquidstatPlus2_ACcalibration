@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <cmath>
 #include "NumberCruncher.h"
 #include "Picoscope.h"
 
@@ -35,8 +36,10 @@ public:
 	void appendParameters(vector<double> freqList);
 	void runExperiment();
 	void readExperimentParamsFile(string filename);
+	void buildSimpleSweep(double ACamp, double DCbias, double freq_start, double freq_end, int numPoints);
 	void getFrequencies(double freq);
 	vector<ComplexNum_polar> rawData;
+	void closePicoscope();
 
 private:
 	Picoscope pscope;
@@ -44,3 +47,8 @@ private:
 	experimentParams_t _defaultParams;
 	vector<experimentParams_t> parameterList;
 };
+
+/* helper functions */
+PS5000A_RANGE getRangeFromText(string str);
+PS5000A_RANGE getRangeFromInputAmplitude(double ACexcitationAmp);
+vector<double> getFrequencyList(double freq_start, double freq_end, int numPoints);
