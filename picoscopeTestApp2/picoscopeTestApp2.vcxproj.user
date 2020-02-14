@@ -7,12 +7,12 @@
     </LocalDebuggerAmpDefaultAccelerator>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RepeatingFrequencySweepBuild(debug)|Win32'">
-    <LocalDebuggerCommandArguments>"C:\picoscope_experiments\Paul_test_folder\setup - sample.txt" "C:\picoscope_experiments\Paul_test_folder\results.csv"</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>0.2 0 1e4 1e7 30</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerAmpDefaultAccelerator />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LocalDebuggerCommandArguments>COM6 "C:\picoscope_experiments\one_control\debugging.txt" "C:\Users\Matt Dion\Dropbox\Admiral Instruments Dropbox\Squidstat customer records\Plus1140_alt_cable/TIA_stage1setting2raw.csv"</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>"C:\EIS_raw_waveforms\testscript.txt" "C:\EIS_raw_waveforms\testoutput.txt"</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RepeatingFrequencySweepBuild(release)|Win32'">

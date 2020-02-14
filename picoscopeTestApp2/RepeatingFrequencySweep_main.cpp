@@ -8,6 +8,7 @@
 #include "NumberCruncher.h"
 #include "cal_experiment.h"
 #include <filesystem>
+#include "InputCheckerAsync.h"
 
 using namespace std;
 
@@ -20,11 +21,21 @@ int main(int argc, char *argv[])
 		Ending frequency, in Hz (double)
 		Total points (int)
 	*/
-	//if (argc < 3)
-	//	return 0;
+	/* Parse arguments */
+	if (argc < 6)
+		return 0;
+	double ACamp = atof(argv[1]);
+	double DCBias = atof(argv[2]);
+	double f_start = atof(argv[3]);
+	double f_end = atof(argv[4]);
+	int numPoints = atof(argv[5]);
 
+	/* setup asynchronous keyboard input monitor */
+	InputCheckerAsync mInputCheckerAsync;
+
+	/* setup experiment sweep */
 	cal_experiment exp;
-	exp.buildSimpleSweep(0.1, 0, 1e6, 1e5, 20);
+	exp.buildSimpleSweep(ACamp, DCBias, f_start, f_end, numPoints);
 
 	while (true)
 	{
@@ -44,9 +55,7 @@ int main(int argc, char *argv[])
 		}
 		fout.close();
 
-		string keyInput;
-		cin >> keyInput;
-		if (keyInput[0] == 'y' || keyInput[0] == 'Y')
+		if (mInputCheckerAsync.getKeyPressed() == 0)
 			continue;
 		else
 			break;

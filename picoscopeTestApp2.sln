@@ -25,12 +25,12 @@ Global
 		{BED446AF-3077-4A9F-8B62-043DE096EF39}.Release|x64.Build.0 = Release|x64
 		{BED446AF-3077-4A9F-8B62-043DE096EF39}.Release|x86.ActiveCfg = Release|Win32
 		{BED446AF-3077-4A9F-8B62-043DE096EF39}.Release|x86.Build.0 = Release|Win32
-		{BED446AF-3077-4A9F-8B62-043DE096EF39}.RepeatingFrequencySweepBuild(debug)|x64.ActiveCfg = RepeatingFrequencySweepBuild(debug)|x64
-		{BED446AF-3077-4A9F-8B62-043DE096EF39}.RepeatingFrequencySweepBuild(debug)|x64.Build.0 = RepeatingFrequencySweepBuild(debug)|x64
+		{BED446AF-3077-4A9F-8B62-043DE096EF39}.RepeatingFrequencySweepBuild(debug)|x64.ActiveCfg = Release|x64
+		{BED446AF-3077-4A9F-8B62-043DE096EF39}.RepeatingFrequencySweepBuild(debug)|x64.Build.0 = Release|x64
 		{BED446AF-3077-4A9F-8B62-043DE096EF39}.RepeatingFrequencySweepBuild(debug)|x86.ActiveCfg = RepeatingFrequencySweepBuild(debug)|Win32
 		{BED446AF-3077-4A9F-8B62-043DE096EF39}.RepeatingFrequencySweepBuild(debug)|x86.Build.0 = RepeatingFrequencySweepBuild(debug)|Win32
-		{BED446AF-3077-4A9F-8B62-043DE096EF39}.RepeatingFrequencySweepBuild(release)|x64.ActiveCfg = RepeatingFrequencySweepBuild(release)|x64
-		{BED446AF-3077-4A9F-8B62-043DE096EF39}.RepeatingFrequencySweepBuild(release)|x64.Build.0 = RepeatingFrequencySweepBuild(release)|x64
+		{BED446AF-3077-4A9F-8B62-043DE096EF39}.RepeatingFrequencySweepBuild(release)|x64.ActiveCfg = Release|x64
+		{BED446AF-3077-4A9F-8B62-043DE096EF39}.RepeatingFrequencySweepBuild(release)|x64.Build.0 = Release|x64
 		{BED446AF-3077-4A9F-8B62-043DE096EF39}.RepeatingFrequencySweepBuild(release)|x86.ActiveCfg = RepeatingFrequencySweepBuild(release)|Win32
 		{BED446AF-3077-4A9F-8B62-043DE096EF39}.RepeatingFrequencySweepBuild(release)|x86.Build.0 = RepeatingFrequencySweepBuild(release)|Win32
 	EndGlobalSection
