@@ -23,31 +23,30 @@ int main(int argc, char *argv[])
 	//if (argc < 3)
 	//	return 0;
 
-	vector<ComplexNum_polar> data;
 	cal_experiment exp;
 	exp.buildSimpleSweep(0.1, 0, 1e6, 1e5, 20);
 
 	while (true)
 	{
+		exp.rawData.clear();
 		exp.runExperiment();
-		data.insert(data.end(), exp.rawData.begin(), exp.rawData.end());
 		
 		/* write data */
 		std::ofstream fout;
-		string filename = std::filesystem::temp_directory_path().string() + "/tempScopeSweepData.txt";
+		string filename = std::filesystem::temp_directory_path().string() + "tempScopeSweepData.txt";
 		fout.open(filename, std::ofstream::out);
 		fout.precision(8);
 		cout.precision(8);
 		fout << "Frequency" << ',' << "Mag" << ',' << "Phase" << '\n';
-		for (int i = 0; i < data.size(); i++)
+		for (int i = 0; i < exp.rawData.size(); i++)
 		{
-			fout << data[i].frequency << ',' << data[i].mag << ',' << data[i].phase << '\n';
+			fout << exp.rawData[i].frequency << ',' << exp.rawData[i].mag << ',' << exp.rawData[i].phase << '\n';
 		}
 		fout.close();
 
 		string keyInput;
 		cin >> keyInput;
-		if (keyInput[0] = 'y' || keyInput[0] == 'Y')
+		if (keyInput[0] == 'y' || keyInput[0] == 'Y')
 			continue;
 		else
 			break;
