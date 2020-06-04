@@ -37,18 +37,22 @@ int main(int argc, char *argv[])
 	cal_experiment exp;
 	exp.buildSimpleSweep(ACamp, DCBias, f_start, f_end, numPoints);
 
+	/* write data header */
+	std::ofstream fout;
+	string filename = std::filesystem::temp_directory_path().string() + "tempScopeSweepData.txt";
+	fout.open(filename, std::ofstream::out);
+	fout.precision(8);
+	cout.precision(8);
+	fout << "Frequency" << ',' << "Mag" << ',' << "Phase" << '\n';
+	fout.close();
+
 	while (true)
 	{
 		exp.rawData.clear();
 		exp.runExperiment();
 		
 		/* write data */
-		std::ofstream fout;
-		string filename = std::filesystem::temp_directory_path().string() + "tempScopeSweepData.txt";
-		fout.open(filename, std::ofstream::out);
-		fout.precision(8);
-		cout.precision(8);
-		fout << "Frequency" << ',' << "Mag" << ',' << "Phase" << '\n';
+		fout.open(filename, std::ofstream::app);
 		for (int i = 0; i < exp.rawData.size(); i++)
 		{
 			fout << exp.rawData[i].frequency << ',' << exp.rawData[i].mag << ',' << exp.rawData[i].phase << '\n';

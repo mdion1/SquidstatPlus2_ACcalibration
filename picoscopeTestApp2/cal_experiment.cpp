@@ -14,18 +14,17 @@ void cal_experiment::runExperiment()
 {
 	for (experimentParams_t params : parameterList)
 	{
+		cout << params.frequency << "\n";
 		// turn on signal generator
 		pscope.turnOnSignalGen(params.frequency, params.amplitude, params.DCbias);
 
 		// get data, crunch the numbers
 		vector<int16_t> A, B;
 		vector<ComplexNum_polar> averageVector;
-		for (int i = 0; i < 5; i++)
-		{
-			pscope.getData_2ch(params.timebase, &params.numPoints, A, B);
-			averageVector.push_back(NumberCruncher::CompareSignals(A, B, params.frequency, Picoscope::getTimebase(params.timebase)));
-		}
-		rawData.push_back(NumberCruncher::getAvg(averageVector));
+		pscope.getData_2ch(params.timebase, &params.numPoints, A, B);
+		//averageVector.push_back(NumberCruncher::CompareSignals(A, B, params.frequency, Picoscope::getTimebase(params.timebase)));
+		//rawData.push_back(NumberCruncher::getAvg(averageVector));
+		rawData.push_back(NumberCruncher::CompareSignals(A, B, params.frequency, Picoscope::getTimebase(params.timebase)));
 	}
 }
 
