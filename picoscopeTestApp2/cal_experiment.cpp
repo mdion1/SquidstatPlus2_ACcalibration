@@ -12,7 +12,7 @@ cal_experiment::~cal_experiment()
 
 void cal_experiment::runExperiment()
 {
-	for (experimentParams_t params : parameterList)
+	for (experimentParams_frequency_sweep_t params : parameterList_freqSweep)
 	{
 		// set up channels
 		pscope.configureChannel(1, params.range_chA);
@@ -71,27 +71,27 @@ void cal_experiment::runExperiment()
 	//NumberCruncher::NormalizeMag(dataResults);
 	//for (int i = 0; i < dataResults.size(); i++)
 	//{
-	//	fout << parameterList[i].frequency << ',' << dataResults[i].mag << ',' << dataResults[i].phase << '\n';
+	//	fout << parameterList_freqSweep[i].frequency << ',' << dataResults[i].mag << ',' << dataResults[i].phase << '\n';
 	//}
 	pscope.close();
 }
 
-void cal_experiment::setDefaultParameters(experimentParams_t params)
+void cal_experiment::setDefaultParameters(experimentParams_frequency_sweep_t params)
 {
-	_defaultParams = params;
+	_defaultParams_freqSweep = params;
 }
 
-void cal_experiment::appendParameters(experimentParams_t params)
+void cal_experiment::appendParameters(experimentParams_frequency_sweep_t params)
 {
-	parameterList.push_back(params);
+	parameterList_freqSweep.push_back(params);
 }
 
 void cal_experiment::appendParameters(vector<double> freqList)
 {
 	for (double freq : freqList)
 	{
-		_defaultParams.frequency = freq;
-		parameterList.push_back(_defaultParams);
+		_defaultParams_freqSweep.frequency = freq;
+		parameterList_freqSweep.push_back(_defaultParams_freqSweep);
 	}
 }
 
@@ -99,6 +99,53 @@ PS5000A_RANGE getRangeFromText(string str);
 
 void cal_experiment::readExperimentParamsFile(string filename)
 {
+#if 1
+//#ifdef AMPLITUDE_SWEEP
+	/* Template for amplitude sweep :
+		-Number of repeats per point
+		-DC_Bias_in_V
+		-frequency_in_Hz
+		-VoltageRange1 (10mV, 20mV, 50mV, 100mV, 200mV, 500mV, 1V, 2V, 5V, 10V, 20V, 50V)
+		-VoltageRange2 (10mV, 20mV, 50mV, 100mV, 200mV, 500mV, 1V, 2V, 5V, 10V, 20V, 50V)
+		-NumberOfChannels (2 ==> Reports B/A; 3 ==> reports C / (A-B);)
+		-List of amplitudes (V) (one per line) */
+	
+	ifstream file;
+	file.open(filename);
+
+	string str;
+	getline(file, str);			//get number of repeated points
+	_defaultParams_ampSweep.num_repeats = atof(str.c_str());
+	getline(file, str);			//get DC bias
+	_defaultParams_ampSweep.DCbias = atof(str.c_str());
+	getline(file, str);			//get excitation signal frequency
+	_defaultParams_ampSweep.frequency = atof(str.c_str());
+	getline(file, str);			//get signal 1 range setting
+	_defaultParams_ampSweep.range_chA = getRangeFromText(str);
+	getline(file, str);			//get signal 2 range setting
+	_defaultParams_ampSweep.range_chB = getRangeFromText(str);
+	getline(file, str);			//get number of signals/channels
+	int numChannels = atoi(str.c_str());
+	pscope.open(numChannels);
+
+	str.clear();
+
+	do
+	{
+		getline(file, str);
+		double frequency = atof(str.c_str());
+		getFrequencies(frequency);
+	} while (!file.eof());
+
+#elif defined FREQUENCY_SWEEP
+	/* Template for frequency sweep :
+		-DC_Bias_in_V
+		-AC_Amplitude_in_V
+		-VoltageRange1 (10mV, 20mV, 50mV, 100mV, 200mV, 500mV, 1V, 2V, 5V, 10V, 20V, 50V)
+		-VoltageRange2 (10mV, 20mV, 50mV, 100mV, 200mV, 500mV, 1V, 2V, 5V, 10V, 20V, 50V)
+		-NumberOfChannels (2 ==> Reports B/A; 3 ==> reports C / (A-B);)
+		-List of frequencies (one per line) */
+
 	ifstream file;
 	file.open(filename);
 	
@@ -123,11 +170,42 @@ void cal_experiment::readExperimentParamsFile(string filename)
 		double frequency = atof(str.c_str());
 		getFrequencies(frequency);
 	} while (!file.eof());
+#endif
 }
 
 void cal_experiment::getFrequencies(double freq)
 {
-	experimentParams_t defaultParams = getDefaultParameters();
+	experimentParams_frequency_sweep_t defaultParams = getDefaultParameters_freqSweep();
+	defaultParams.frequency = freq;
+
+	defaultParams.timebase = TIMEBASE_16NS;
+	while (true)
+	{
+		int maxNumPoints = 1e5;
+		double dt = Picoscope::getTimebase(defaultParams.timebase);
+		int numCycles = 2;
+		double numPoints = (numCycles / freq) / dt;
+		if (numPoints > maxNumPoints)
+			defaultParams.timebase = (scopeTimebase_t)((int)defaultParams.timebase + 1);
+		else
+		{
+			defaultParams.numPoints = maxNumPoints;
+			break;
+		}
+	}
+
+	appendParameters(defaultParams);
+}
+
+void cal_experiment::getFrequencies(double freq)
+{
+	static bool once = true;
+	if (once)
+	{
+		once = false;
+
+	}
+	experimentParams_frequency_sweep_t defaultParams = getDefaultParameters_freqSweep();
 	defaultParams.frequency = freq;
 
 	defaultParams.timebase = TIMEBASE_16NS;

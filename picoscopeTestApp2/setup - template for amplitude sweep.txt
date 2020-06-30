@@ -1,0 +1,7 @@
+Number of repeats per point
+DC_Bias_in_V
+frequency_in_Hz
+VoltageRange1 (10mV, 20mV, 50mV, 100mV, 200mV, 500mV, 1V, 2V, 5V, 10V, 20V, 50V)
+VoltageRange2 (10mV, 20mV, 50mV, 100mV, 200mV, 500mV, 1V, 2V, 5V, 10V, 20V, 50V)
+NumberOfChannels (2 ==> Reports B/A; 3 ==> reports C / (A-B);)
+List of amplitudes (V) (one per line)
