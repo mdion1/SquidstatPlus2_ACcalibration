@@ -7,7 +7,7 @@ void AmplitudeSweepExperiment::runExperiment()
 	pscope.configureChannel(1, parameterList[0].range_chA);
 	pscope.configureChannel(2, parameterList[0].range_chB);
 
-	for (experimentParams_t params : parameterList)
+	for (PicoscopeSamplingParams_t params : parameterList)
 	{
 		// turn on signal generator
 		pscope.turnOnSignalGen(params.frequency, params.amplitude, params.DCbias);
@@ -18,10 +18,10 @@ void AmplitudeSweepExperiment::runExperiment()
 		for (int i = 0; i < params.num_repeats; i++)
 		{
 			pscope.getData_2ch(params.timebase, &params.numPoints, A, B);
-			averageVector.push_back(NumberCruncher::CompareSignals(A, B, params.frequency, Picoscope::getTimebase(params.timebase)));
+			averageVector.push_back(NumberCruncher::CompareSignals(A, B, &pscope, params));
 		}
 		rawData.push_back(NumberCruncher::getAvg(averageVector));
-		cout << rawData.back().frequency << '\t' << rawData.back().mag << '\t' << rawData.back().phase << '\n';
+		cout << rawData.back().inputAmplitude << '\t' << rawData.back().mag << '\t' << rawData.back().phase << '\n';
 	}
 	pscope.close();
 }
@@ -49,9 +49,9 @@ void AmplitudeSweepExperiment::readExperimentParamsFile(string filename)
 	_defaultParams.frequency = atof(str.c_str());
 	calcSamplingParams();
 	getline(file, str);			//get signal 1 range setting
-	_defaultParams.range_chA = getRangeFromText(str);
+	_defaultParams.range_chA = Picoscope::getRangeFromText(str);
 	getline(file, str);			//get signal 2 range setting
-	_defaultParams.range_chB = getRangeFromText(str);
+	_defaultParams.range_chB = Picoscope::getRangeFromText(str);
 	getline(file, str);			//get number of signals/channels
 	int numChannels = atoi(str.c_str());
 	pscope.open(numChannels);

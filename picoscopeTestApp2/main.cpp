@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 	}
 #elif defined AMPLITUDE_SWEEP
 	auto rawDataArray = sweepRawData->data();
-	fout << "Excitation frequency: " << rawDataArray[0].frequency;
+	fout << "Excitation frequency: " << rawDataArray[0].frequency << '\n';
 	fout << "Input Amplitude" << ',' << "Relative Mag" << ',' << "Relative Phase" << '\n';
 	for (int i = 0; i < sweepRawData->size(); i++)
 	{

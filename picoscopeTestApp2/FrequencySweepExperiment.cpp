@@ -100,9 +100,9 @@ void FrequencySweepExperiment::readExperimentParamsFile(string filename)
 	getline(file, str);			//get excitation signal amplitude
 	_defaultParams.amplitude = atof(str.c_str());
 	getline(file, str);			//get signal 1 range setting
-	_defaultParams.range_chA = getRangeFromText(str);
+	_defaultParams.range_chA = Picoscope::getRangeFromText(str);
 	getline(file, str);			//get signal 2 range setting
-	_defaultParams.range_chB = getRangeFromText(str);
+	_defaultParams.range_chB = Picoscope::getRangeFromText(str);
 	getline(file, str);			//get number of signals/channels
 	int numChannels = atoi(str.c_str());
 	pscope.open(numChannels);

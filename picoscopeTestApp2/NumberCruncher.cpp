@@ -26,6 +26,26 @@ ComplexNum_polar NumberCruncher::CompareSignals(const vector<int16_t> &sig1, con
 	return ret;
 }
 
+ComplexNum_polar NumberCruncher::CompareSignals(const vector<int16_t> &sig1, const vector<int16_t> &sig2, const Picoscope * picoscope, PicoscopeSamplingParams_t params)
+{
+	double timestep = Picoscope::getTimebase(params.timebase);
+	double period = (1 / params.frequency) / timestep;
+	ComplexNum_polar sig1_complex = SingleFrequencyFourier(sig1, period);
+	sig1_complex.mag *= picoscope->getBinaryToVoltsScalingRatio(1);
+	ComplexNum_polar sig2_complex = SingleFrequencyFourier(sig2, period);
+	sig2_complex.mag *= picoscope->getBinaryToVoltsScalingRatio(2);
+	ComplexNum_polar ret;
+	ret.frequency = params.frequency;
+	ret.mag = sig2_complex.mag / sig1_complex.mag;
+	ret.phase = fmod(sig2_complex.phase - sig1_complex.phase, 360);
+	ret.inputAmplitude = sig1_complex.mag;
+	if (ret.phase > 180)
+		ret.phase -= 360;
+	if (ret.phase <= -180)
+		ret.phase += 360;
+	return ret;
+}
+
 ComplexNum_polar NumberCruncher::CompareSignalsDiff(const vector<int16_t> &sig1, const vector<int16_t> &sig2, const vector<int16_t> &sig3, double frequency, double timestep)
 {
 	if (sig1.size() != sig2.size())
@@ -71,7 +91,7 @@ ComplexNum_polar NumberCruncher::SingleFrequencyFourier(const vector<int16_t> &d
 		sumCosine += data[i] * cos(arg);
 	}
 	ComplexNum_polar x;
-	x.mag = sqrt(sumSine * sumSine + sumCosine * sumCosine) / 2 / len;
+	x.mag = sqrt(sumSine * sumSine + sumCosine * sumCosine) * 2 / len;
 	x.phase = atan2(sumSine, sumCosine) * 180 / M_PI;
 	return x;
 }
