@@ -8,12 +8,15 @@
 
 using namespace std;
 
-typedef struct
+class ComplexNum_polar
 {
+public:
+	ComplexNum_polar() { frequency = mag = phase = inputAmplitude = 0; };
 	double frequency;
 	double mag;
 	double phase;
-}ComplexNum_polar;
+	double inputAmplitude;
+};
 
 class NumberCruncher
 {

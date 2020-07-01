@@ -18,9 +18,10 @@ ComplexNum_polar NumberCruncher::CompareSignals(const vector<int16_t> &sig1, con
 	ret.frequency = frequency;
 	ret.mag = sig2_complex.mag / sig1_complex.mag;
 	ret.phase = fmod(sig2_complex.phase - sig1_complex.phase, 360);
-	if (ret.phase > 170)
+	ret.inputAmplitude = sig1_complex.mag;
+	if (ret.phase > 180)
 		ret.phase -= 360;
-	if (ret.phase < -190)
+	if (ret.phase <= -180)
 		ret.phase += 360;
 	return ret;
 }
@@ -70,24 +71,32 @@ ComplexNum_polar NumberCruncher::SingleFrequencyFourier(const vector<int16_t> &d
 		sumCosine += data[i] * cos(arg);
 	}
 	ComplexNum_polar x;
-	x.mag = sqrt(sumSine * sumSine + sumCosine * sumCosine);
+	x.mag = sqrt(sumSine * sumSine + sumCosine * sumCosine) / 2 / len;
 	x.phase = atan2(sumSine, sumCosine) * 180 / M_PI;
 	return x;
 }
 
 ComplexNum_polar NumberCruncher::getAvg(const vector<ComplexNum_polar> &data)
 {
-	ComplexNum_polar ret = { 0, 0 };
+	ComplexNum_polar ret; //todo: constructor
 	if (data.size() == 0)
 		return ret;
+	double x = 0, y = 0;
+	ret.inputAmplitude = 0;
 	for (int i = 0; i < data.size(); i++)
 	{
-		ret.mag += data[i].mag;
-		ret.phase += data[i].phase;
+		x += data[i].mag * cos(data[i].phase * M_PI / 180);
+		y += data[i].mag * sin(data[i].phase * M_PI / 180);
+		ret.inputAmplitude += data[i].inputAmplitude;
 	}
+	x /= data.size();
+	y /= data.size();
+	ret.inputAmplitude /= data.size();
+
 	ret.frequency = data[0].frequency;
-	ret.mag /= data.size();
-	ret.phase /= data.size();
+	ret.mag = sqrt(x * x + y * y);
+	ret.phase = atan2(y, x) * 180 / M_PI;
+	
 	return ret;
 }
 

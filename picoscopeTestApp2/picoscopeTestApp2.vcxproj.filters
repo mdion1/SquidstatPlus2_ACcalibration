@@ -27,15 +27,18 @@
     <ClInclude Include="NumberCruncher.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cal_experiment.h">
+    <ClInclude Include="AmplitudeSweepExperiment.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FrequencySweepExperiment.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SweepExperimentBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="picoscopeTestApp2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Picoscope.cpp">
@@ -44,7 +47,16 @@
     <ClCompile Include="NumberCruncher.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cal_experiment.cpp">
+    <ClCompile Include="AmplitudeSweepExperiment.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FrequencySweepExperiment.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SweepExperimentBase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
