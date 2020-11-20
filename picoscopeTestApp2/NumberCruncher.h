@@ -17,6 +17,8 @@ public:
 	double mag;
 	double phase;
 	double inputAmplitude;
+	double biasIn;
+	double biasOut;
 };
 
 class NumberCruncher

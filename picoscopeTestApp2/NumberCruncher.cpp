@@ -19,6 +19,8 @@ ComplexNum_polar NumberCruncher::CompareSignals(const vector<int16_t> &sig1, con
 	ret.mag = sig2_complex.mag / sig1_complex.mag;
 	ret.phase = fmod(sig2_complex.phase - sig1_complex.phase, 360);
 	ret.inputAmplitude = sig1_complex.mag;
+	ret.biasIn = sig1_complex.biasIn;
+	ret.biasOut = sig1_complex.biasOut;
 	if (ret.phase > 180)
 		ret.phase -= 360;
 	if (ret.phase <= -180)
@@ -32,13 +34,17 @@ ComplexNum_polar NumberCruncher::CompareSignals(const vector<int16_t> &sig1, con
 	double period = (1 / params.frequency) / timestep;
 	ComplexNum_polar sig1_complex = SingleFrequencyFourier(sig1, period);
 	sig1_complex.mag *= picoscope->getBinaryToVoltsScalingRatio(1);
+	sig1_complex.biasIn *= picoscope->getBinaryToVoltsScalingRatio(1);
 	ComplexNum_polar sig2_complex = SingleFrequencyFourier(sig2, period);
 	sig2_complex.mag *= picoscope->getBinaryToVoltsScalingRatio(2);
+	sig2_complex.biasIn *= picoscope->getBinaryToVoltsScalingRatio(2);
 	ComplexNum_polar ret;
 	ret.frequency = params.frequency;
 	ret.mag = sig2_complex.mag / sig1_complex.mag;
 	ret.phase = fmod(sig2_complex.phase - sig1_complex.phase, 360);
 	ret.inputAmplitude = sig1_complex.mag;
+	ret.biasIn = sig1_complex.biasIn;
+	ret.biasOut = sig2_complex.biasIn;
 	if (ret.phase > 180)
 		ret.phase -= 360;
 	if (ret.phase <= -180)
@@ -83,22 +89,25 @@ ComplexNum_polar NumberCruncher::SingleFrequencyFourier(const vector<int16_t> &d
 	//determine number of samples to ignore
 	double numWholeCycles = floor(data.size() / period);
 	int len = (int)floor(numWholeCycles * period);
-	double sumSine = 0, sumCosine = 0;
+	double sumSine = 0, sumCosine = 0, sumDC = 0;
 	for (int i = 0; i < len; i++)
 	{
 		double arg = i * (2 * M_PI / period);
 		sumSine += data[i] * sin(arg);
 		sumCosine += data[i] * cos(arg);
+		sumDC += data[i];
 	}
 	ComplexNum_polar x;
 	x.mag = sqrt(sumSine * sumSine + sumCosine * sumCosine) * 2 / len;
 	x.phase = atan2(sumSine, sumCosine) * 180 / M_PI;
+	x.biasIn = sumDC / len;
 	return x;
 }
 
 ComplexNum_polar NumberCruncher::getAvg(const vector<ComplexNum_polar> &data)
 {
 	ComplexNum_polar ret; //todo: constructor
+	memset(&ret, 0, sizeof(ComplexNum_polar));
 	if (data.size() == 0)
 		return ret;
 	double x = 0, y = 0;
@@ -108,10 +117,14 @@ ComplexNum_polar NumberCruncher::getAvg(const vector<ComplexNum_polar> &data)
 		x += data[i].mag * cos(data[i].phase * M_PI / 180);
 		y += data[i].mag * sin(data[i].phase * M_PI / 180);
 		ret.inputAmplitude += data[i].inputAmplitude;
+		ret.biasIn += data[i].biasIn;
+		ret.biasOut += data[i].biasOut;
 	}
 	x /= data.size();
 	y /= data.size();
 	ret.inputAmplitude /= data.size();
+	ret.biasIn /= data.size();
+	ret.biasOut /= data.size();
 
 	ret.frequency = data[0].frequency;
 	ret.mag = sqrt(x * x + y * y);

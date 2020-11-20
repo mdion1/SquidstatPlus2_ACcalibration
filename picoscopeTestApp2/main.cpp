@@ -6,8 +6,8 @@
 #include "NumberCruncher.h"
 //#include "FrequencySweepExperiment.h"
 #include "AmplitudeSweepExperiment.h"
+#include "BiasSweepExperiment.h"
 
-#define AMPLITUDE_SWEEP
 using namespace std;
 
 int main(int argc, char* argv[])
@@ -19,6 +19,8 @@ int main(int argc, char* argv[])
 	FrequencySweepExperiment exp;
 #elif defined AMPLITUDE_SWEEP
 	AmplitudeSweepExperiment exp;
+#elif defined BIAS_SWEEP
+	BiasSweepExperiment exp;
 #endif
 
 	exp.readExperimentParamsFile(argv[1]);
@@ -51,7 +53,17 @@ int main(int argc, char* argv[])
 	{
 		fout << rawDataArray[i].inputAmplitude << ',' << rawDataArray[i].mag << ',' << rawDataArray[i].phase << '\n';
 	}
+#elif defined BIAS_SWEEP
+	auto rawDataArray = sweepRawData->data();
+	fout << "Excitation frequency (Hz): " << rawDataArray[0].frequency << '\n';
+	fout << "Excitation amplitude (V): " << rawDataArray[0].frequency << '\n';
+	fout << "DC bias input (V),DC bias output (V),Relative Mag,Relative Phase\n";
+	for (int i = 0; i < sweepRawData->size(); i++)
+	{
+		fout << rawDataArray[i].biasIn << ',' << rawDataArray[i].biasOut << ',' << rawDataArray[i].mag << ',' << rawDataArray[i].phase << '\n';
+	}
 #endif
+	fout.close();
 
 	system("pause");
 	return 0;
