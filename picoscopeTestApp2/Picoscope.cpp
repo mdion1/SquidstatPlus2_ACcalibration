@@ -26,21 +26,21 @@ bool Picoscope::open(int numChannels)
 	return true;
 }
 
-void Picoscope::configureChannel(int channelNum, PS5000A_RANGE range)
+void Picoscope::configureChannel(int channelNum, PS5000A_RANGE range, enPS5000ACoupling coupling)
 {
 	switch (channelNum)
 	{
 	case 1:
-		ps5000aSetChannel(_InstrHandle, PS5000A_CHANNEL_A, 1, PS5000A_DC, range, 0);
+		ps5000aSetChannel(_InstrHandle, PS5000A_CHANNEL_A, 1, coupling, range, 0);
 		break;
 	case 2:
-		ps5000aSetChannel(_InstrHandle, PS5000A_CHANNEL_B, 1, PS5000A_DC, range, 0);
+		ps5000aSetChannel(_InstrHandle, PS5000A_CHANNEL_B, 1, coupling, range, 0);
 		break;
 	case 3:
-		ps5000aSetChannel(_InstrHandle, PS5000A_CHANNEL_C, 1, PS5000A_DC, range, 0);
+		ps5000aSetChannel(_InstrHandle, PS5000A_CHANNEL_C, 1, coupling, range, 0);
 		break;
 	case 4:
-		ps5000aSetChannel(_InstrHandle, PS5000A_CHANNEL_D, 1, PS5000A_DC, range, 0);
+		ps5000aSetChannel(_InstrHandle, PS5000A_CHANNEL_D, 1, coupling, range, 0);
 		break;
 	default:
 		break;
@@ -55,6 +55,27 @@ void Picoscope::turnOnSignalGen(double frequency, double amplitude, double dcbia
 void Picoscope::close()
 {
 	ps5000aCloseUnit(_InstrHandle);
+}
+
+void Picoscope::sample(scopeTimebase_t timebase, uint32_t* numPoints_inOut, vector<int16_t>* data_out, int num_channels)
+{
+    ps5000aRunBlock(_InstrHandle, 0, (*numPoints_inOut), (uint32_t)timebase, NULL, 0, NULL, NULL);
+    int16_t ready = 0;
+    while (!ready)
+    {
+        !ps5000aIsReady(_InstrHandle, &ready);
+    }
+    ps5000aStop(_InstrHandle);
+
+    int16_t overflow;
+    ps5000aGetValues(_InstrHandle, 0, numPoints_inOut, 1, PS5000A_RATIO_MODE_NONE, 0, &overflow);       //todo: can I call this before ps5000aSetDataBuffer() and ps5000aGetValues()?
+    for (int i = 0; i < num_channels; i++)
+    {
+        int16_t* data = new int16_t[(*numPoints_inOut)];
+        ps5000aSetDataBuffer(_InstrHandle, (enPS5000AChannel)i, data, (*numPoints_inOut), 0, PS5000A_RATIO_MODE_NONE);
+        data_out[0].assign(data, data + (*numPoints_inOut));
+        delete[] data;
+    }
 }
 
 void Picoscope::getData_2ch(scopeTimebase_t timebase, uint32_t * pNumPoints, vector<int16_t> &chA_data, vector<int16_t> &chB_data)

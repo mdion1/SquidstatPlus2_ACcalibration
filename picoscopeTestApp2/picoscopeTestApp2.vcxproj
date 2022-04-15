@@ -156,6 +156,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="argParse.h" />
     <ClInclude Include="cal_experiment.h" />
     <ClInclude Include="NumberCruncher.h" />
     <ClInclude Include="Picoscope.h" />
@@ -163,6 +164,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="argParse.cpp" />
     <ClCompile Include="cal_experiment.cpp" />
     <ClCompile Include="NumberCruncher.cpp" />
     <ClCompile Include="Picoscope.cpp" />

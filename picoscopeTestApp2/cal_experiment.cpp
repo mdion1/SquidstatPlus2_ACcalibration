@@ -1,178 +1,137 @@
 #include "stdafx.h"
 #include "cal_experiment.h"
 
-
-cal_experiment::cal_experiment()
+void cal_experiment::runExperiment(const inputParams_t& inputParams)
 {
-}
+    int numChannels = inputParams.numChannels;
 
-cal_experiment::~cal_experiment()
-{
-}
+    for (int i = 0; i < inputParams.freqList.size(); i++)
+    {
+        getFrequencies(inputParams.freqList[i]);
+    }
+    pscope.open(numChannels);
 
-void cal_experiment::runExperiment()
-{
-	for (experimentParams_t params : parameterList)
+    // set up channels
+    scaledProbes.resize(numChannels);
+    for (int i = 0; i < numChannels; i++)
+    {
+        scaledProbes[i] = validateProbe(inputParams.probe[i]);
+        pscope.configureChannel(i, scaledProbes[i].range, scaledProbes[i].coupling);
+    }
+
+    rawData.resize(numChannels);
+	for (samplingParams_t params : parameterList)
 	{
-		// set up channels
-		pscope.configureChannel(1, params.range_chA);
-		if (pscope.getNumChannels() == 2)
-		{
-			pscope.configureChannel(2, params.range_chB);
-		}
-		else if (pscope.getNumChannels() == 3)
-		{
-			pscope.configureChannel(2, params.range_chA);
-			pscope.configureChannel(3, params.range_chB);
-		}
-		else if (pscope.getNumChannels() == 4)
-		{
-			pscope.configureChannel(2, params.range_chA);
-			pscope.configureChannel(3, params.range_chB);
-			pscope.configureChannel(4, params.range_chB);
-		}
-
 		// turn on signal generator
-		pscope.turnOnSignalGen(params.frequency, params.amplitude, params.DCbias);
+		pscope.turnOnSignalGen(params.frequency, inputParams.ACamp, inputParams.DCbias);
 		
 		// get data, crunch the numbers
-		vector<int16_t> A, B, C, D;
-		
-		if (pscope.getNumChannels() == 2)
-		{
+        const int NUM_REPEATS = 1;
+        vector<vector<ComplexNum_polar>> averages;
+        averages.resize(numChannels);
+        for (int i = 0; i < NUM_REPEATS; i++)
+        {
+            vector<int16_t>* data = new vector<int16_t>[numChannels];
+            pscope.sample(params.timebase, &params.numPoints, data, numChannels);
+            for (int ch = 0; ch < numChannels; ch++)
+            {
+                ComplexNum_polar num = NumberCruncher::fourier(data[i], params.frequency, Picoscope::getTimebase(params.timebase));
+                //todo: scale
+                averages[ch].push_back(num);
+            }
+        }
 
-			vector<ComplexNum_polar> averageVector;
-			for (int i = 0; i < 5; i++)
-			{
-				pscope.getData_2ch(params.timebase, &params.numPoints, A, B);
-				averageVector.push_back(NumberCruncher::CompareSignals(A, B, params.frequency, Picoscope::getTimebase(params.timebase)));
-			}
-			rawData.push_back(NumberCruncher::getAvg(averageVector));
-		}
-		else if (pscope.getNumChannels() == 3)
-		{
-			vector<ComplexNum_polar> averageVector;
-			for (int i = 0; i < 5; i++)
-			{
-				pscope.getData_3ch(params.timebase, &params.numPoints, A, B, C);
-				averageVector.push_back(NumberCruncher::CompareSignalsDiff(A, B, C, params.frequency, Picoscope::getTimebase(params.timebase)));
-			}
-			rawData.push_back(NumberCruncher::getAvg(averageVector));
-		}
-		/*else if (pscope.getNumChannels() == 4)
-		{
-			pscope.getData_4ch(params.timebase, &params.numPoints, A, B, C, D);
-			dataResults.push_back(NumberCruncher::CompareSignalsDiff2(A, B, C, D, params.frequency, Picoscope::getTimebase(params.timebase)));
-		}*/
-		//cout << params.frequency << '\t' << dataResults.back().mag << '\t' << dataResults.back().phase << '\n';
-		cout << rawData.back().frequency << '\t' << rawData.back().mag << '\t' << rawData.back().phase << '\n';
+        // normalize all channels to channel A
+        for (int ch = 0; ch < numChannels; ch++)
+        {
+            for (int i = 0; i < averages[0].size(); i++)
+            {
+                averages[ch][i].addPhase(-averages[ch][i].Phase);
+                averages[ch][i].scalarMultiply(getScale(scaledProbes[i].range));
+            }
+            rawData[ch].push_back(NumberCruncher::avgComplex(averages[ch]));
+            cout << rawData[ch].back().frequency << '\t' << rawData[ch].back().Mag << '\t' << rawData[ch].back().Phase << '\n';
+        }
+        cout << '\n';
 	}
-
-	//NumberCruncher::NormalizeMag(dataResults);
-	//for (int i = 0; i < dataResults.size(); i++)
-	//{
-	//	fout << parameterList[i].frequency << ',' << dataResults[i].mag << ',' << dataResults[i].phase << '\n';
-	//}
 	pscope.close();
-}
-
-void cal_experiment::setDefaultParameters(experimentParams_t params)
-{
-	_defaultParams = params;
-}
-
-void cal_experiment::appendParameters(experimentParams_t params)
-{
-	parameterList.push_back(params);
-}
-
-void cal_experiment::appendParameters(vector<double> freqList)
-{
-	for (double freq : freqList)
-	{
-		_defaultParams.frequency = freq;
-		parameterList.push_back(_defaultParams);
-	}
-}
-
-PS5000A_RANGE getRangeFromText(string str);
-
-void cal_experiment::readExperimentParamsFile(string filename)
-{
-	ifstream file;
-	file.open(filename);
-	
-	string str;
-	getline(file, str);			//get DC bias
-	_defaultParams.DCbias = atof(str.c_str());
-	getline(file, str);			//get excitation signal amplitude
-	_defaultParams.amplitude = atof(str.c_str());
-	getline(file, str);			//get signal 1 range setting
-	_defaultParams.range_chA = getRangeFromText(str);
-	getline(file, str);			//get signal 2 range setting
-	_defaultParams.range_chB = getRangeFromText(str);
-	getline(file, str);			//get number of signals/channels
-	int numChannels = atoi(str.c_str());
-	pscope.open(numChannels);
-
-	str.clear();
-
-	do
-	{
-		getline(file, str);
-		double frequency = atof(str.c_str());
-		getFrequencies(frequency);
-	} while (!file.eof());
 }
 
 void cal_experiment::getFrequencies(double freq)
 {
-	experimentParams_t defaultParams = getDefaultParameters();
-	defaultParams.frequency = freq;
-
-	defaultParams.timebase = TIMEBASE_16NS;
+    samplingParams_t samplingParams;
+	samplingParams.frequency = freq;
+	samplingParams.timebase = TIMEBASE_16NS;
 	while (true)
 	{
 		int maxNumPoints = 1e5;
-		double dt = Picoscope::getTimebase(defaultParams.timebase);
+		double dt = Picoscope::getTimebase(samplingParams.timebase);
 		int numCycles = 2;
 		double numPoints = (numCycles / freq) / dt;
 		if (numPoints > maxNumPoints)
-			defaultParams.timebase = (scopeTimebase_t)((int)defaultParams.timebase + 1);
+			samplingParams.timebase = (scopeTimebase_t)((int)samplingParams.timebase + 1);
 		else
 		{
-			defaultParams.numPoints = maxNumPoints;
+			samplingParams.numPoints = maxNumPoints;
 			break;
 		}
 	}
-
-	appendParameters(defaultParams);
+    parameterList.push_back(samplingParams);
 }
 
-PS5000A_RANGE getRangeFromText(string str)
+probeParams_t cal_experiment::validateProbe(const probeParams_t& probe)
 {
-	if (!str.compare("10mV"))
-		return PS5000A_10MV;
-	else if (!str.compare("20mV"))
-		return PS5000A_20MV;
-	else if (!str.compare("50mV"))
-		return PS5000A_50MV;
-	else if (!str.compare("100mV"))
-		return PS5000A_100MV;
-	else if (!str.compare("200mV"))
-		return PS5000A_200MV;
-	else if (!str.compare("500mV"))
-		return PS5000A_500MV;
-	else if (!str.compare("1V"))
-		return PS5000A_1V;
-	else if (!str.compare("2V"))
-		return PS5000A_2V;
-	else if (!str.compare("5V"))
-		return PS5000A_5V;
-	else if (!str.compare("10V"))
-		return PS5000A_10V;
-	else if (!str.compare("20V"))
-		return PS5000A_20V;
-	else
-		return PS5000A_50V;
+    if (PROBE_DIV_1X == probe.div) {
+        return probe;
+    }
+    else {
+        probeParams_t scaledProbe = probe;
+        scaledProbe.div = PROBE_DIV_1X;
+        switch (probe.range)
+        {
+        case PS5000A_10MV:
+        case PS5000A_20MV:
+        case PS5000A_50MV:
+            //error, won't work
+            scaledProbe.range = PS5000A_10MV;
+        default:
+            scaledProbe.range = (PS5000A_RANGE)((int)probe.range - 3); //scale down by 10x
+        }
+        return scaledProbe;
+    }
+}
+
+double cal_experiment::getScale(PS5000A_RANGE range)
+{
+//15 bit resolution
+    static const double scale = (1 << (15 - 1)) - 1;
+    switch (range)
+    {
+    case PS5000A_10MV:
+        return scale * 0.01;
+    case PS5000A_20MV:
+        return scale * 0.02;
+    case PS5000A_50MV:
+        return scale * 0.05;
+    case PS5000A_100MV:
+        return scale * 0.1;
+    case PS5000A_200MV:
+        return scale * 0.2;
+    case PS5000A_500MV:
+        return scale * 0.5;
+    case PS5000A_1V:
+        return scale * 1;
+    case PS5000A_2V:
+        return scale * 2;
+    case PS5000A_5V:
+        return scale * 5;
+    case PS5000A_10V:
+        return scale * 10;
+    case PS5000A_20V:
+        return scale * 20;
+    case PS5000A_50V:
+        return scale * 50;
+    default:
+        return NAN;
+    }
 }

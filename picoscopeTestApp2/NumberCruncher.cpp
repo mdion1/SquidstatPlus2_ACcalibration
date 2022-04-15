@@ -1,102 +1,71 @@
 #include "stdafx.h"
 #include "NumberCruncher.h"
 
-NumberCruncher::NumberCruncher()
-{
-}
-
-NumberCruncher::~NumberCruncher()
-{
-}
-
-ComplexNum_polar NumberCruncher::CompareSignals(const vector<int16_t> &sig1, const vector<int16_t> &sig2, double frequency, double timestep)
+ComplexNum_polar NumberCruncher::fourier(const vector<int16_t>& data, double frequency, double timestep)
 {
 	double period = (1 / frequency) / timestep;
-	ComplexNum_polar sig1_complex = SingleFrequencyFourier(sig1, period);
-	ComplexNum_polar sig2_complex = SingleFrequencyFourier(sig2, period);
-	ComplexNum_polar ret;
-	ret.frequency = frequency;
-	ret.mag = sig2_complex.mag / sig1_complex.mag;
-	ret.phase = fmod(sig2_complex.phase - sig1_complex.phase, 360);
-	if (ret.phase > 170)
-		ret.phase -= 360;
-	if (ret.phase < -190)
-		ret.phase += 360;
-	return ret;
+    double numWholeCycles = floor(data.size() / period);
+    int len = (int)floor(numWholeCycles * period);
+    double sumSine = 0, sumCosine = 0;
+    for (int i = 0; i < len; i++)
+    {
+        double arg = i * (2 * M_PI / period);
+        sumSine += data[i] * sin(arg);
+        sumCosine += data[i] * cos(arg);
+    }
+    double mag = sqrt(sumSine * sumSine + sumCosine * sumCosine);
+    double phase = atan2(sumSine, sumCosine) * 180 / M_PI;
+    ComplexNum_polar x;
+    x.setPolar(mag, phase);
+    return x;
 }
 
-ComplexNum_polar NumberCruncher::CompareSignalsDiff(const vector<int16_t> &sig1, const vector<int16_t> &sig2, const vector<int16_t> &sig3, double frequency, double timestep)
+ComplexNum_polar NumberCruncher::avgComplex(const vector<ComplexNum_polar> &data)
 {
-	if (sig1.size() != sig2.size())
-		return ComplexNum_polar();
+    ComplexNum_polar ret;
+    ret.setPolar(0, 0);
 
-	vector<int16_t> diff;
-	diff.reserve(sig1.size());
-	for (int i = 0; i < sig1.size(); i++)
-	{
-		diff.push_back(sig1[i] - sig2[i]);
-	}
-
-	return CompareSignals(diff, sig3, frequency, timestep);
-}
-
-ComplexNum_polar NumberCruncher::CompareSignalsDiff2(const vector<int16_t> &sig1, const vector<int16_t> &sig2, const vector<int16_t> &sig3, const vector<int16_t> &sig4, double frequency, double timestep)
-{
-	if (sig1.size() != sig2.size())
-		return ComplexNum_polar();
-
-	vector<int16_t> diff1, diff2;
-	diff1.reserve(sig1.size());
-	diff2.reserve(sig3.size());
-	for (int i = 0; i < sig1.size(); i++)
-	{
-		diff1.push_back(sig1[i] - sig2[i]);
-		diff2.push_back(sig3[i] - sig4[i]);
-	}
-
-	return CompareSignals(diff1, diff2, frequency, timestep);
-}
-
-ComplexNum_polar NumberCruncher::SingleFrequencyFourier(const vector<int16_t> &data, double period)
-{
-	//determine number of samples to ignore
-	double numWholeCycles = floor(data.size() / period);
-	int len = (int)floor(numWholeCycles * period);
-	double sumSine = 0, sumCosine = 0;
-	for (int i = 0; i < len; i++)
-	{
-		double arg = i * (2 * M_PI / period);
-		sumSine += data[i] * sin(arg);
-		sumCosine += data[i] * cos(arg);
-	}
-	ComplexNum_polar x;
-	x.mag = sqrt(sumSine * sumSine + sumCosine * sumCosine);
-	x.phase = atan2(sumSine, sumCosine) * 180 / M_PI;
-	return x;
-}
-
-ComplexNum_polar NumberCruncher::getAvg(const vector<ComplexNum_polar> &data)
-{
-	ComplexNum_polar ret = { 0, 0 };
 	if (data.size() == 0)
 		return ret;
+
+    double im = 0;
+    double re = 0;
 	for (int i = 0; i < data.size(); i++)
 	{
-		ret.mag += data[i].mag;
-		ret.phase += data[i].phase;
+		re += data[i].Re;
+		im += data[i].Im;
 	}
 	ret.frequency = data[0].frequency;
-	ret.mag /= data.size();
-	ret.phase /= data.size();
+    re /= data.size();
+    im /= data.size();
+    ret.setRect(re, im);
 	return ret;
 }
 
-void NumberCruncher::NormalizeMag(vector<ComplexNum_polar> &x)
+void ComplexNum_polar::scalarMultiply(double scalar)
 {
-	ComplexNum_polar baseline = x.back();
-	for (int i = 0; i < x.size(); i++)
-	{
-		x[i].mag /= baseline.mag;
-		x[i].phase -= baseline.phase;
-	}
+    Mag *= scalar;
+    Re *= scalar;
+    Im *= scalar;
+}
+
+void ComplexNum_polar::addPhase(double phase)
+{
+    setPolar(Mag, Phase + phase);
+}
+
+void ComplexNum_polar::setPolar(double mag, double phase)
+{
+    Mag = mag;
+    Phase = phase;
+    Re = Mag * cos(phase * M_PI / 180);
+    Im = Mag * sin(phase * M_PI / 180);
+}
+
+void ComplexNum_polar::setRect(double re, double im)
+{
+    Re = re;
+    Im = im;
+    Mag = sqrt(Re * Re + Im * Im);
+    Phase = atan2(Im, Re) * 180.0 / M_PI;
 }

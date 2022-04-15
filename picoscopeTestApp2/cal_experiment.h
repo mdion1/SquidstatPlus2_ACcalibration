@@ -7,6 +7,7 @@
 #include <vector>
 #include "NumberCruncher.h"
 #include "Picoscope.h"
+#include "argParse.h"
 
 #define MIN(x, y) (x < y ? x : y)
 #define MAX(x, y) (x > y ? x : y)
@@ -16,31 +17,23 @@ using namespace std;
 typedef struct
 {
 	double frequency;
-	double amplitude;
-	double DCbias;
-	PS5000A_RANGE range_chA;
-	PS5000A_RANGE range_chB;
 	scopeTimebase_t timebase;
 	uint32_t numPoints;
-}experimentParams_t;
+}samplingParams_t;
 
 class cal_experiment
 {
 public:
-	cal_experiment();
-	~cal_experiment();
-	void setDefaultParameters(experimentParams_t params);
-	experimentParams_t getDefaultParameters() { return _defaultParams; };
-	void appendParameters(experimentParams_t params);
-	void appendParameters(vector<double> freqList);
-	void runExperiment();
-	void readExperimentParamsFile(string filename);
+	void runExperiment(const inputParams_t& inputParams);
 	void getFrequencies(double freq);
-	vector<ComplexNum_polar> rawData;
+    const vector<vector<ComplexNum_polar>>& getRawData() { return rawData; };
 
 private:
+    double getScale(PS5000A_RANGE range);
+    probeParams_t validateProbe(const probeParams_t& probe);
+    vector<vector<ComplexNum_polar>> rawData;
 	Picoscope pscope;
 	string _outputFilename;
-	experimentParams_t _defaultParams;
-	vector<experimentParams_t> parameterList;
+	vector<samplingParams_t> parameterList;
+    vector<probeParams_t> scaledProbes;
 };
