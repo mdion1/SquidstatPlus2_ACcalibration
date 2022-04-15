@@ -40,9 +40,8 @@ private:
     inputParams_t getDefaultParams();
     void parseArgPair(string argName, string argval);
     void parseFreqList(string argname);
-    bool parseInt(string str, int* int_out);
-    bool parseDouble(string str, double* double_out);
     bool parseProbeCouplingStr(string str, PS5000A_COUPLING* coupling_out);
+    bool parseProbeDivStr(string str, probeDiv_t* div_out);
     bool parseProbeRangeStr(string str, PS5000A_RANGE* range_out);
     char toLower(char upper);
     string toLower(const string& str);

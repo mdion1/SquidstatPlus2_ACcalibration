@@ -48,8 +48,8 @@ void argParse::parseFreqList(string argname)
         while (!file.eof()) {
             string str;
             getline(file, str);
-            double freq;
-            if (parseDouble(str, &freq)) {
+            double freq = atof(str.c_str());
+            if (freq > 0) {
                 params.freqList.push_back(freq);
             }
             else {
@@ -74,56 +74,77 @@ void argParse::parseArgPair(string argname, string argval)
             params.probe[1].range = range;
         }
     }
-    else if (compareStr("ACamp", argname)) {
-        double amp;
-        if (parseDouble(argval, &amp)) {
-            params.ACamp = amp;
+    else if (compareStr("ProbeCRange", argname)) {
+        PS5000A_RANGE range;
+        if (parseProbeRangeStr(argval, &range)) {
+            params.probe[2].range = range;
         }
     }
-    else if (compareStr("numChannels", argname)) {
-        int numChannels;
-        if (parseInt(argval, &numChannels)) {
-            params.numChannels = numChannels;
+    else if (compareStr("ProbeDRange", argname)) {
+        PS5000A_RANGE range;
+        if (parseProbeRangeStr(argval, &range)) {
+            params.probe[3].range = range;
         }
+    }
+    else if (compareStr("ProbeADiv", argname)) {
+        probeDiv_t div;
+        if (parseProbeDivStr(argval, &div)) {
+            params.probe[0].div = div;
+        }
+    }
+    else if (compareStr("ProbeBDiv", argname)) {
+        probeDiv_t div;
+        if (parseProbeDivStr(argval, &div)) {
+            params.probe[1].div = div;
+        }
+    }
+    else if (compareStr("ProbeCDiv", argname)) {
+        probeDiv_t div;
+        if (parseProbeDivStr(argval, &div)) {
+            params.probe[2].div = div;
+        }
+    }
+    else if (compareStr("ProbeDDiv", argname)) {
+        probeDiv_t div;
+        if (parseProbeDivStr(argval, &div)) {
+            params.probe[3].div = div;
+        }
+    }
+    else if (compareStr("ProbeAcoupling", argname)) {
+        PS5000A_COUPLING coupling;
+        if (parseProbeCouplingStr(argval, &coupling)) {
+            params.probe[0].coupling = coupling;
+        }
+    }
+    else if (compareStr("ProbeBcoupling", argname)) {
+        PS5000A_COUPLING coupling;
+        if (parseProbeCouplingStr(argval, &coupling)) {
+            params.probe[1].coupling = coupling;
+        }
+    }
+    else if (compareStr("ProbeCcoupling", argname)) {
+        PS5000A_COUPLING coupling;
+        if (parseProbeCouplingStr(argval, &coupling)) {
+            params.probe[2].coupling = coupling;
+        }
+    }
+    else if (compareStr("ProbeDcoupling", argname)) {
+        PS5000A_COUPLING coupling;
+        if (parseProbeCouplingStr(argval, &coupling)) {
+            params.probe[3].coupling = coupling;
+        }
+    }
+    else if (compareStr("ACamp", argname)) {
+        params.ACamp = atof(argval.c_str());
+    }
+    else if (compareStr("numChannels", argname)) {
+        params.numChannels = atoi(argval.c_str());
     }
     else if (compareStr("outputFile", argname)) {
         params.outputFileName = argval;
     }
     else if (compareStr("DCbias", argname)) {
-        double dcbias;
-        if (parseDouble(argval, &dcbias)) {
-            params.DCbias = dcbias;
-        }
-    }
-}
-
-bool argParse::parseInt(string str, int* int_out)
-{
-    if (nullptr == int_out) {
-        return false;
-    }
-    int result = atoi(str.c_str());
-    if (0 == result) {
-        return false;
-    }
-    else {
-        *int_out = result;
-        return true;
-    }
-}
-
-bool argParse::parseDouble(string str, double* double_out)
-{
-    if (nullptr == double_out) {
-        return false;
-    }
-    int result = atof(str.c_str());
-    if (0 == result) {
-        return false;
-    }
-    else {
-        *double_out = result;
-        return true;
+        params.DCbias = atof(argval.c_str());
     }
 }
 
@@ -143,6 +164,21 @@ bool argParse::parseProbeCouplingStr(string str, PS5000A_COUPLING* coupling_out)
     }
     else {
         return false;
+    }
+}
+
+bool argParse::parseProbeDivStr(string str, probeDiv_t* div_out)
+{
+    if (nullptr == div_out) {
+        return false;
+    }
+    else if (compareStr(str, "1x")) {
+        *div_out = PROBE_DIV_1X;
+        return true;
+    }
+    else if (compareStr(str, "10x")) {
+        *div_out = PROBE_DIV_10X;
+        return true;
     }
 }
 
@@ -231,19 +267,15 @@ bool argParse::compareStr(const string& a, const string& b)
 vector<string> argParse::splitStr(const string& str, char sep)
 {
     vector<string> strList;
-    for (int i = 0; i < str.length(); i++)
+    for (int idxNext = 0; idxNext < str.length();)
     {
-        int findIdx_start = str.find(sep, i);
-        if (-1 == findIdx_start) {
-            break;
+        int idxStart = idxNext;
+        idxNext = str.find(sep, idxStart + 1);
+        if (-1 == idxNext) {
+            idxNext = str.size();
         }
-        else {
-            int findIdx_end = str.find(sep, i);
-            if (-1 == findIdx_end) {
-                findIdx_end = str.length();
-            }
-            strList.push_back(str.substr(findIdx_start, findIdx_end - findIdx_start));
-        }
+        strList.push_back(str.substr(idxStart, idxNext - idxStart));
+        idxNext++;  //get rid of the leading sep character
     }
     return strList;
 }

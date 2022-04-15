@@ -14,8 +14,6 @@ typedef enum {
 class Picoscope
 {
 public:
-	Picoscope();
-	~Picoscope();
 	bool open(int numChannels = 2);
 	void close();
     void configureChannel(int channelNum, PS5000A_RANGE range, enPS5000ACoupling coupling);
