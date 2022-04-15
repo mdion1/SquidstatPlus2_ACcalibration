@@ -24,16 +24,16 @@ typedef struct
 class cal_experiment
 {
 public:
-	void runExperiment(const inputParams_t& inputParams);
+	void runExperiment(inputParams_t& inputParams);
 	void getFrequencies(double freq);
     const vector<vector<ComplexNum_polar>>& getRawData() { return rawData; };
 
 private:
-    double getScale(PS5000A_RANGE range);
-    probeParams_t validateProbe(const probeParams_t& probe);
+    double getScale(const probeParams_t& probe);
+    void validateProbe(probeParams_t& probe);
     vector<vector<ComplexNum_polar>> rawData;
 	Picoscope pscope;
 	string _outputFilename;
 	vector<samplingParams_t> parameterList;
-    vector<probeParams_t> scaledProbes;
+	static PS5000A_RANGE adjustProbeScaleWithDiv(const probeParams_t& probe);
 };

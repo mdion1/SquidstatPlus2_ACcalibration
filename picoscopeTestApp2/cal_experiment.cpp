@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "cal_experiment.h"
 
-void cal_experiment::runExperiment(const inputParams_t& inputParams)
+void cal_experiment::runExperiment(inputParams_t& inputParams)
 {
     int numChannels = inputParams.numChannels;
 
@@ -12,11 +12,10 @@ void cal_experiment::runExperiment(const inputParams_t& inputParams)
     pscope.open(numChannels);
 
     // set up channels
-    scaledProbes.resize(numChannels);
-    for (int i = 0; i < numChannels; i++)
+    for (int ch = 0; ch < numChannels; ch++)
     {
-        scaledProbes[i] = validateProbe(inputParams.probe[i]);
-        pscope.configureChannel(i, scaledProbes[i].range, scaledProbes[i].coupling);
+        validateProbe(inputParams.probe[ch]);
+        pscope.configureChannel(ch, adjustProbeScaleWithDiv(inputParams.probe[ch]), inputParams.probe[ch].coupling);
     }
 
     rawData.resize(numChannels);
@@ -26,7 +25,7 @@ void cal_experiment::runExperiment(const inputParams_t& inputParams)
 		pscope.turnOnSignalGen(params.frequency, inputParams.ACamp, inputParams.DCbias);
 		
 		// get data, crunch the numbers
-        const int NUM_REPEATS = 1;
+        const int NUM_REPEATS = 5;
         vector<vector<ComplexNum_polar>> averages;
         averages.resize(numChannels);
         for (int i = 0; i < NUM_REPEATS; i++)
@@ -35,22 +34,29 @@ void cal_experiment::runExperiment(const inputParams_t& inputParams)
             pscope.sample(params.timebase, &params.numPoints, data, numChannels);
             for (int ch = 0; ch < numChannels; ch++)
             {
-                ComplexNum_polar num = NumberCruncher::fourier(data[i], params.frequency, Picoscope::getTimebase(params.timebase));
+                ComplexNum_polar num = NumberCruncher::fourier(data[ch], params.frequency, Picoscope::getTimebase(params.timebase));
                 //todo: scale
                 averages[ch].push_back(num);
             }
         }
 
         // normalize all channels to channel A
-        for (int ch = 0; ch < numChannels; ch++)
+        for (int ch = numChannels - 1; ch >= 0; ch--) // loop backwards, since chA phase needs to be retained
         {
-            for (int i = 0; i < averages[0].size(); i++)
+            for (int i = 0; i < averages[0].size(); i++)   
             {
-                averages[ch][i].addPhase(-averages[ch][i].Phase);
-                averages[ch][i].scalarMultiply(getScale(scaledProbes[i].range));
+                averages[ch][i].addPhase(-averages[0][i].Phase);   //channel A is the "reference" phase
+                averages[ch][i].scalarMultiply(getScale(inputParams.probe[ch]));
             }
             rawData[ch].push_back(NumberCruncher::avgComplex(averages[ch]));
-            cout << rawData[ch].back().frequency << '\t' << rawData[ch].back().Mag << '\t' << rawData[ch].back().Phase << '\n';
+            
+        }
+
+        //print output
+        cout << rawData[0].back().frequency << '\t';
+        for (int ch = 0; ch < numChannels; ch++)
+        {
+            cout << rawData[ch].back().Mag << '\t' << rawData[ch].back().Phase << '\t';
         }
         cout << '\n';
 	}
@@ -79,33 +85,41 @@ void cal_experiment::getFrequencies(double freq)
     parameterList.push_back(samplingParams);
 }
 
-probeParams_t cal_experiment::validateProbe(const probeParams_t& probe)
+void cal_experiment::validateProbe(probeParams_t& probe)
 {
     if (PROBE_DIV_1X == probe.div) {
-        return probe;
+        return;
     }
     else {
-        probeParams_t scaledProbe = probe;
-        scaledProbe.div = PROBE_DIV_1X;
         switch (probe.range)
         {
         case PS5000A_10MV:
         case PS5000A_20MV:
         case PS5000A_50MV:
-            //error, won't work
-            scaledProbe.range = PS5000A_10MV;
+            // 10x probes cannot go below 100mV range
+            probe.range = PS5000A_100MV;
+            break;
         default:
-            scaledProbe.range = (PS5000A_RANGE)((int)probe.range - 3); //scale down by 10x
+            break;
         }
-        return scaledProbe;
     }
 }
 
-double cal_experiment::getScale(PS5000A_RANGE range)
+PS5000A_RANGE cal_experiment::adjustProbeScaleWithDiv(const probeParams_t& probe)
+{
+    if (PROBE_DIV_1X == probe.div) {
+        return probe.range;
+    }
+    else {
+        return (PS5000A_RANGE)((int)probe.range - 3); //scale down by 10x
+    }
+}
+
+double cal_experiment::getScale(const probeParams_t& probe)
 {
 //15 bit resolution
-    static const double scale = (1 << (15 - 1)) - 1;
-    switch (range)
+    double scale = (1.0 / INT16_MAX);// *((PROBE_DIV_10X == probe.div) ? 10 : 1);
+    switch (probe.range)
     {
     case PS5000A_10MV:
         return scale * 0.01;

@@ -10,4 +10,8 @@
     <LocalDebuggerCommandArguments>COM6 "C:\picoscope_experiments\one_control\debugging.txt" "C:\Users\Matt Dion\Dropbox\Admiral Instruments Dropbox\Squidstat customer records\Plus1140_alt_cable/TIA_stage1setting2raw.csv"</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LocalDebuggerCommandArguments>"sample input.txt"</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
 </Project>
