@@ -79,10 +79,28 @@ std::vector<std::complex<double>> MultiFrequencyFourier(const std::vector<int16_
 
 ComplexNum_polar NumberCruncher::fourier(const vector<int16_t>& data, double frequency, double timestep)
 {
-    auto fourierSum = MultiFrequencyFourier(data, 1.0 / timestep, frequency, 0);
+    int NumHarmonics = 3;
+    //int NumHarmonics = 10;
+
+    auto fourierSum = MultiFrequencyFourier(data, 1.0 / timestep, frequency, NumHarmonics);
     ComplexNum_polar x;
     x.setRect(fourierSum[1].real(), fourierSum[1].imag());
+    x.setBias(fourierSum[0].real() / 2);
     x.frequency = frequency;
+
+
+    /* Calculate THD for the first 10 harmonics */
+    if (std::abs(fourierSum[1]) == 0) {
+        x.THD = 0;
+    }
+    else {
+        double sumHarm = 0;
+        for (int i = 2; i < fourierSum.size(); ++i) {
+            sumHarm += std::abs(fourierSum[i]);
+        }
+        x.THD = 100 * sqrt(sumHarm) / std::abs(fourierSum[1]);
+    }
+
     return x;
 #if 0
 	double period = (1 / frequency) / timestep;
@@ -114,15 +132,23 @@ ComplexNum_polar NumberCruncher::avgComplex(const vector<ComplexNum_polar> &data
 
     double im = 0;
     double re = 0;
+    double bias = 0;
+    double thd = 0;
 	for (int i = 0; i < data.size(); i++)
 	{
 		re += data[i].Re;
 		im += data[i].Im;
+        bias += data[i].Bias;
+        thd += data[i].THD;
 	}
 	ret.frequency = data[0].frequency;
     re /= data.size();
     im /= data.size();
+    bias /= data.size();
+    thd /= data.size();
     ret.setRect(re, im);
+    ret.setBias(bias);
+    ret.setTHD(thd);
 	return ret;
 }
 
@@ -131,6 +157,7 @@ void ComplexNum_polar::scalarMultiply(double scalar)
     Mag *= scalar;
     Re *= scalar;
     Im *= scalar;
+    Bias *= scalar;
 }
 
 void ComplexNum_polar::addPhase(double phase)
@@ -152,4 +179,14 @@ void ComplexNum_polar::setRect(double re, double im)
     Im = im;
     Mag = sqrt(Re * Re + Im * Im);
     Phase = atan2(Im, Re) * 180.0 / M_PI;
+}
+
+void ComplexNum_polar::setBias(double bias)
+{
+    Bias = bias;
+}
+
+void ComplexNum_polar::setTHD(double thd)
+{
+    THD = thd;
 }

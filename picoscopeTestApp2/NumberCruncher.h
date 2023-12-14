@@ -15,11 +15,16 @@ public:
     void addPhase(double phase);
     void setPolar(double mag, double phase);
     void setRect(double re, double im);
+    void setBias(double bias);
+    void setTHD(double thd);
     double frequency;
     double Mag;
     double Phase;
     double Re;
     double Im;
+
+    double Bias;
+    double THD;
 };
 
 class NumberCruncher

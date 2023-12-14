@@ -56,7 +56,9 @@ void cal_experiment::runExperiment(inputParams_t& inputParams)
         cout << rawData[0].back().frequency << '\t';
         for (int ch = 0; ch < numChannels; ch++)
         {
-            cout << rawData[ch].back().Mag << '\t' << rawData[ch].back().Phase << '\t';
+            cout << rawData[ch].back().Mag << '\t';
+            //cout << rawData[ch].back().Phase << '\t';
+            //cout << rawData[ch].back().Bias << '\t';
         }
         cout << '\n';
 	}
